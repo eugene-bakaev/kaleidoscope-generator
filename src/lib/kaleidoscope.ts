@@ -31,31 +31,37 @@ export function renderKaleidoscope(opts: KaleidoscopeOptions): void {
 
   ctx.clearRect(0, 0, W, H)
 
-  // Scale factor from SVG coordinate space (500×500) to canvas space
-  const scaleX = offscreenCanvas.width / 500
-  const scaleY = offscreenCanvas.height / 500
+  // Scale factor from SVG coordinate space (500×500) to canvas pixel space
+  const SVG_SIZE = 500
+  const scaleX = offscreenCanvas.width / SVG_SIZE
+  const scaleY = offscreenCanvas.height / SVG_SIZE
+
+  // Triangle center in offscreen canvas pixel space — used as the draw/clip anchor
+  const originX = triangle.cx * scaleX
+  const originY = triangle.cy * scaleY
 
   // Triangle vertices in offscreen canvas pixel space
   const v = triangleVertices(triangle, scaleX, scaleY)
 
   for (let i = 0; i < sectors; i++) {
     ctx.save()
+    // Place the triangle center at the canvas center
     ctx.translate(cx, cy)
     ctx.rotate((i / sectors) * Math.PI * 2)
     if (flip && i % 2 === 1) {
       ctx.scale(-1, 1)
     }
 
-    // Clip to triangle path (centered at origin)
+    // Clip to triangle path, offset so the triangle center sits at the origin
     ctx.beginPath()
-    ctx.moveTo(v[0].x - cx, v[0].y - cy)
-    ctx.lineTo(v[1].x - cx, v[1].y - cy)
-    ctx.lineTo(v[2].x - cx, v[2].y - cy)
+    ctx.moveTo(v[0].x - originX, v[0].y - originY)
+    ctx.lineTo(v[1].x - originX, v[1].y - originY)
+    ctx.lineTo(v[2].x - originX, v[2].y - originY)
     ctx.closePath()
     ctx.clip()
 
-    // Draw the offscreen canvas shifted so triangle center aligns with origin
-    ctx.drawImage(offscreenCanvas, -triangle.cx * scaleX, -triangle.cy * scaleY)
+    // Draw the offscreen canvas so the triangle center aligns with the origin
+    ctx.drawImage(offscreenCanvas, -originX, -originY)
 
     ctx.restore()
   }
