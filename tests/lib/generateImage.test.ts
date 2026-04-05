@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import { generateImage } from '@/lib/generateImage'
 import { PALETTES } from '@/lib/palette'
+import type { CircleDescriptor } from '@/lib/primitives/types'
 
 const config = {
   enabledTypes: ['circles', 'dots', 'lines'] as const,
@@ -37,7 +38,7 @@ describe('generateImage', () => {
     const result = generateImage({ ...config, enabledTypes: ['dots'] })
     for (const d of result) {
       expect(d.tag).toBe('circle')
-      expect(d.r).toBeLessThanOrEqual(10)
+      expect((d as CircleDescriptor).r).toBeLessThanOrEqual(10)
     }
   })
 })
