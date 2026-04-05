@@ -35,5 +35,9 @@ function renderDescriptor(d: PrimitiveDescriptor, key: number): React.ReactEleme
       return <polygon key={key} points={d.points} fill={d.fill} stroke={d.stroke} strokeWidth={d.strokeWidth} opacity={d.opacity} />
     case 'path':
       return <path key={key} d={d.d} fill={d.fill} stroke={d.stroke} strokeWidth={d.strokeWidth} opacity={d.opacity} />
+    default: {
+      const _exhaustive: never = d
+      throw new Error(`Unhandled descriptor tag: ${(_exhaustive as { tag: string }).tag}`)
+    }
   }
 }

@@ -7,6 +7,9 @@ import type { PrimitiveDescriptor } from '@/lib/primitives/types'
 const descriptors: PrimitiveDescriptor[] = [
   { tag: 'circle', cx: 100, cy: 100, r: 30, fill: '#ff0000', stroke: 'none', strokeWidth: 0, opacity: 0.8 },
   { tag: 'line', x1: 0, y1: 0, x2: 100, y2: 100, stroke: '#00ff00', strokeWidth: 2, opacity: 1 },
+  { tag: 'polyline', points: '0,0 50,50 100,0', stroke: '#0000ff', strokeWidth: 1, fill: 'none', opacity: 0.5 },
+  { tag: 'polygon', points: '0,0 50,100 100,0', fill: '#ff00ff', stroke: 'none', strokeWidth: 0, opacity: 0.7 },
+  { tag: 'path', d: 'M 0 0 L 100 100', fill: 'none', stroke: '#ffff00', strokeWidth: 2, opacity: 0.9 },
 ]
 
 describe('BaseImageSVG', () => {
@@ -25,11 +28,14 @@ describe('BaseImageSVG', () => {
     expect(rect?.getAttribute('fill')).toBe('#111111')
   })
 
-  it('renders each descriptor', () => {
+  it('renders each descriptor type', () => {
     const { container } = render(
       <BaseImageSVG descriptors={descriptors} background="#111111" svgRef={null} />
     )
     expect(container.querySelector('circle')).not.toBeNull()
     expect(container.querySelector('line')).not.toBeNull()
+    expect(container.querySelector('polyline')).not.toBeNull()
+    expect(container.querySelector('polygon')).not.toBeNull()
+    expect(container.querySelector('path')).not.toBeNull()
   })
 })
