@@ -15,7 +15,10 @@ export function createRandom(seed: number): Rng {
   next.randInt = (min: number, max: number): number =>
     Math.floor(next() * (max - min)) + min
 
-  next.pick = <T>(arr: T[]): T => arr[next.randInt(0, arr.length)]
+  next.pick = <T>(arr: T[]): T => {
+    if (arr.length === 0) throw new RangeError('pick called on empty array')
+    return arr[next.randInt(0, arr.length)]
+  }
 
   return next
 }

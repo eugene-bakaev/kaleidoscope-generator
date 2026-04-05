@@ -45,4 +45,9 @@ describe('createRandom', () => {
       expect(arr).toContain(rng.pick(arr))
     }
   })
+
+  it('pick throws on an empty array', () => {
+    const rng = createRandom(1)
+    expect(() => rng.pick([])).toThrow(RangeError)
+  })
 })
