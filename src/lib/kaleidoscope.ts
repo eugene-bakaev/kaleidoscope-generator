@@ -4,7 +4,7 @@ export interface TriangleState {
   cx: number    // center x in SVG coordinate space (0–500)
   cy: number    // center y in SVG coordinate space (0–500)
   angle: number // rotation in radians
-  size: number  // distance from center to tip in SVG units
+  size: number  // distance from center to vertex in SVG units
 }
 
 export interface KaleidoscopeOptions {
@@ -15,9 +15,19 @@ export interface KaleidoscopeOptions {
   flip: boolean
 }
 
+interface Point { x: number; y: number }
+interface Affine { a: number; b: number; c: number; d: number; e: number; f: number }
+
 /**
- * Renders the kaleidoscope onto `canvas` using the rasterized base image
- * from `offscreenCanvas` and the triangle selector state.
+ * Divides the output square into `sectors` triangular wedges from the center,
+ * and fills each wedge by affine-mapping the source triangle into it.
+ *
+ * The source triangle's three vertices map to:
+ *   v[0] → canvas center (apex of every sector)
+ *   v[1] → left edge of sector  (swapped on odd sectors when flip=true)
+ *   v[2] → right edge of sector
+ *
+ * This ensures the square is fully tiled — no gaps, no circular crop.
  */
 export function renderKaleidoscope(opts: KaleidoscopeOptions): void {
   const { canvas, offscreenCanvas, triangle, sectors, flip } = opts
@@ -26,62 +36,98 @@ export function renderKaleidoscope(opts: KaleidoscopeOptions): void {
 
   const W = canvas.width
   const H = canvas.height
-  const cx = W / 2
-  const cy = H / 2
+  const centerX = W / 2
+  const centerY = H / 2
 
   ctx.clearRect(0, 0, W, H)
 
-  // Scale factor from SVG coordinate space (500×500) to canvas pixel space
+  // Scale from SVG coordinate space (500×500) to offscreen canvas pixels
   const SVG_SIZE = 500
   const scaleX = offscreenCanvas.width / SVG_SIZE
   const scaleY = offscreenCanvas.height / SVG_SIZE
 
-  // Triangle center in offscreen canvas pixel space — used as the draw/clip anchor
-  const originX = triangle.cx * scaleX
-  const originY = triangle.cy * scaleY
+  // Source triangle vertices in offscreen canvas pixel space
+  const srcAngles = [
+    triangle.angle,
+    triangle.angle + (Math.PI * 2) / 3,
+    triangle.angle + (Math.PI * 4) / 3,
+  ]
+  const vSrc: [Point, Point, Point] = srcAngles.map(a => ({
+    x: triangle.cx * scaleX + Math.cos(a) * triangle.size * scaleX,
+    y: triangle.cy * scaleY + Math.sin(a) * triangle.size * scaleY,
+  })) as [Point, Point, Point]
 
-  // Triangle vertices in offscreen canvas pixel space
-  const v = triangleVertices(triangle, scaleX, scaleY)
+  // Sector radius — extends past all four corners of the square
+  const sectorRadius = Math.sqrt(centerX * centerX + centerY * centerY) * 1.05
+  const sectorAngle = (Math.PI * 2) / sectors
 
   for (let i = 0; i < sectors; i++) {
-    ctx.save()
-    // Place the triangle center at the canvas center
-    ctx.translate(cx, cy)
-    ctx.rotate((i / sectors) * Math.PI * 2)
-    if (flip && i % 2 === 1) {
-      ctx.scale(-1, 1)
-    }
+    const θ0 = i * sectorAngle
+    const θ1 = (i + 1) * sectorAngle
 
-    // Clip to triangle path, offset so the triangle center sits at the origin
+    const apex: Point  = { x: centerX, y: centerY }
+    const edge0: Point = { x: centerX + Math.cos(θ0) * sectorRadius, y: centerY + Math.sin(θ0) * sectorRadius }
+    const edge1: Point = { x: centerX + Math.cos(θ1) * sectorRadius, y: centerY + Math.sin(θ1) * sectorRadius }
+
+    // Mirror alternate sectors by swapping the two edge points
+    const vDst: [Point, Point, Point] = flip && i % 2 === 1
+      ? [apex, edge1, edge0]
+      : [apex, edge0, edge1]
+
+    const m = computeAffine(vSrc, vDst)
+    if (!m) continue
+
+    ctx.save()
+
+    // Clip to this sector's triangle
     ctx.beginPath()
-    ctx.moveTo(v[0].x - originX, v[0].y - originY)
-    ctx.lineTo(v[1].x - originX, v[1].y - originY)
-    ctx.lineTo(v[2].x - originX, v[2].y - originY)
+    ctx.moveTo(apex.x, apex.y)
+    ctx.lineTo(edge0.x, edge0.y)
+    ctx.lineTo(edge1.x, edge1.y)
     ctx.closePath()
     ctx.clip()
 
-    // Draw the offscreen canvas so the triangle center aligns with the origin
-    ctx.drawImage(offscreenCanvas, -originX, -originY)
+    // Apply affine transform and draw
+    ctx.setTransform(m.a, m.b, m.c, m.d, m.e, m.f)
+    ctx.drawImage(offscreenCanvas, 0, 0)
 
     ctx.restore()
   }
+
+  // Reset transform
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
 }
 
-function triangleVertices(
-  t: TriangleState,
-  scaleX: number,
-  scaleY: number
-): { x: number; y: number }[] {
-  const angles = [t.angle, t.angle + (Math.PI * 2) / 3, t.angle + (Math.PI * 4) / 3]
-  return angles.map(a => ({
-    x: t.cx * scaleX + Math.cos(a) * t.size * scaleX,
-    y: t.cy * scaleY + Math.sin(a) * t.size * scaleY,
-  }))
+/**
+ * Computes the affine transform matrix that maps src[i] → dst[i] for i = 0,1,2.
+ * Returns null if the source triangle is degenerate.
+ */
+function computeAffine(src: [Point, Point, Point], dst: [Point, Point, Point]): Affine | null {
+  const [s0, s1, s2] = src
+  const [d0, d1, d2] = dst
+
+  // det of the source triangle basis matrix
+  const det =
+    s0.x * (s1.y - s2.y) -
+    s0.y * (s1.x - s2.x) +
+    (s1.x * s2.y - s2.x * s1.y)
+
+  if (Math.abs(det) < 1e-10) return null
+  const inv = 1 / det
+
+  const a = inv * (d0.x * (s1.y - s2.y) + d1.x * (s2.y - s0.y) + d2.x * (s0.y - s1.y))
+  const c = inv * (d0.x * (s2.x - s1.x) + d1.x * (s0.x - s2.x) + d2.x * (s1.x - s0.x))
+  const e = inv * (d0.x * (s1.x * s2.y - s2.x * s1.y) + d1.x * (s2.x * s0.y - s0.x * s2.y) + d2.x * (s0.x * s1.y - s1.x * s0.y))
+
+  const b = inv * (d0.y * (s1.y - s2.y) + d1.y * (s2.y - s0.y) + d2.y * (s0.y - s1.y))
+  const d = inv * (d0.y * (s2.x - s1.x) + d1.y * (s0.x - s2.x) + d2.y * (s1.x - s0.x))
+  const f = inv * (d0.y * (s1.x * s2.y - s2.x * s1.y) + d1.y * (s2.x * s0.y - s0.x * s2.y) + d2.y * (s0.x * s1.y - s1.x * s0.y))
+
+  return { a, b, c, d, e, f }
 }
 
 /**
  * Rasterizes an SVG string into an offscreen canvas.
- * Returns a Promise that resolves with the canvas.
  */
 export async function rasterizeSVG(svgString: string, width: number, height: number): Promise<HTMLCanvasElement> {
   const canvas = document.createElement('canvas')
