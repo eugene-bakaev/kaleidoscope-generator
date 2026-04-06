@@ -6,18 +6,20 @@ interface Props {
   state: TriangleState
   onChange: (next: TriangleState) => void
   svgSize: number   // side length of the SVG viewBox (500)
+  sectors: number
 }
 
 const MOVE_STEP = 5
 const ROTATE_STEP = (5 * Math.PI) / 180
 const SCALE_FACTOR = 0.1
 
-export function TriangleSelector({ state, onChange, svgSize }: Props) {
+export function TriangleSelector({ state, onChange, svgSize, sectors }: Props) {
   const { cx, cy, angle, size } = state
   const isDragging = useRef(false)
+  const dragOffset = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 })
   const svgRef = useRef<SVGSVGElement | null>(null)
 
-  const vertices = triangleVertices(cx, cy, angle, size)
+  const vertices = triangleVertices(cx, cy, angle, size, sectors)
   const points = vertices.map(v => `${v.x},${v.y}`).join(' ')
 
   const svgPoint = useCallback((e: React.PointerEvent): { x: number; y: number } | null => {
@@ -34,6 +36,8 @@ export function TriangleSelector({ state, onChange, svgSize }: Props) {
 
   const onPointerDown = (e: React.PointerEvent) => {
     e.currentTarget.setPointerCapture(e.pointerId)
+    const pt = svgPoint(e)
+    if (pt) dragOffset.current = { dx: cx - pt.x, dy: cy - pt.y }
     isDragging.current = true
   }
 
@@ -41,7 +45,7 @@ export function TriangleSelector({ state, onChange, svgSize }: Props) {
     if (!isDragging.current) return
     const pt = svgPoint(e)
     if (!pt) return
-    onChange({ ...state, cx: pt.x, cy: pt.y })
+    onChange({ ...state, cx: pt.x + dragOffset.current.dx, cy: pt.y + dragOffset.current.dy })
   }
 
   const onPointerUp = () => { isDragging.current = false }
@@ -82,9 +86,11 @@ export function TriangleSelector({ state, onChange, svgSize }: Props) {
   )
 }
 
-function triangleVertices(cx: number, cy: number, angle: number, size: number) {
-  return [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3].map(offset => ({
-    x: cx + Math.cos(angle + offset) * size,
-    y: cy + Math.sin(angle + offset) * size,
-  }))
+function triangleVertices(cx: number, cy: number, angle: number, size: number, sectors: number) {
+  const half = Math.PI / sectors
+  return [
+    { x: cx, y: cy },
+    { x: cx + Math.cos(angle - half) * size, y: cy + Math.sin(angle - half) * size },
+    { x: cx + Math.cos(angle + half) * size, y: cy + Math.sin(angle + half) * size },
+  ]
 }

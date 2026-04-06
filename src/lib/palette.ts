@@ -51,6 +51,13 @@ export function getDarkestColor(colors: string[]): string {
   })
 }
 
+/** Returns the hex color with the highest perceived luminance. */
+export function getLightestColor(colors: string[]): string {
+  return colors.reduce((lightest, color) => {
+    return luminance(color) > luminance(lightest) ? color : lightest
+  })
+}
+
 function luminance(hex: string): number {
   const r = parseInt(hex.slice(1, 3), 16)
   const g = parseInt(hex.slice(3, 5), 16)

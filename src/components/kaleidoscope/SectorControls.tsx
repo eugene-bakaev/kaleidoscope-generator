@@ -18,8 +18,9 @@ export function SectorControls({ sectors, flip, onSectorsChange, onFlipChange }:
         </label>
         <input
           type="range"
-          min={3}
+          min={4}
           max={24}
+          step={2}
           value={sectors}
           onChange={e => onSectorsChange(Number(e.target.value))}
           className="w-full accent-violet-500"

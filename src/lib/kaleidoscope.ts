@@ -47,19 +47,21 @@ export function renderKaleidoscope(opts: KaleidoscopeOptions): void {
   const scaleY = offscreenCanvas.height / SVG_SIZE
 
   // Source triangle vertices in offscreen canvas pixel space
-  const srcAngles = [
-    triangle.angle,
-    triangle.angle + (Math.PI * 2) / 3,
-    triangle.angle + (Math.PI * 4) / 3,
+  // Isoceles: apex at (cx,cy), two legs at angle ± π/sectors
+  const half = Math.PI / sectors
+  const apexX = triangle.cx * scaleX
+  const apexY = triangle.cy * scaleY
+  const vSrc: [Point, Point, Point] = [
+    { x: apexX, y: apexY },
+    { x: apexX + Math.cos(triangle.angle - half) * triangle.size * scaleX,
+      y: apexY + Math.sin(triangle.angle - half) * triangle.size * scaleY },
+    { x: apexX + Math.cos(triangle.angle + half) * triangle.size * scaleX,
+      y: apexY + Math.sin(triangle.angle + half) * triangle.size * scaleY },
   ]
-  const vSrc: [Point, Point, Point] = srcAngles.map(a => ({
-    x: triangle.cx * scaleX + Math.cos(a) * triangle.size * scaleX,
-    y: triangle.cy * scaleY + Math.sin(a) * triangle.size * scaleY,
-  })) as [Point, Point, Point]
 
   // Sector radius — extends past all four corners of the square
-  const sectorRadius = Math.sqrt(centerX * centerX + centerY * centerY) * 1.05
   const sectorAngle = (Math.PI * 2) / sectors
+  const sectorRadius = Math.sqrt(centerX * centerX + centerY * centerY) / Math.cos(sectorAngle / 2)
 
   for (let i = 0; i < sectors; i++) {
     const θ0 = i * sectorAngle
