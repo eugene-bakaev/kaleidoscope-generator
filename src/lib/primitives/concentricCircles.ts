@@ -2,7 +2,7 @@
 import type { PrimitiveConfig, CircleDescriptor } from './types'
 
 export function generateConcentricCircles(config: PrimitiveConfig): CircleDescriptor[] {
-  const { palette, bounds, rng, complexity } = config
+  const { palette, bounds, rng, complexity, opacityMin, opacityMax } = config
   const groupCount = Math.round(1 + complexity * 3)  // 1–4 groups
   const result: CircleDescriptor[] = []
 
@@ -21,7 +21,7 @@ export function generateConcentricCircles(config: PrimitiveConfig): CircleDescri
         fill: 'none',
         stroke: color,
         strokeWidth: 1 + rng() * 2,
-        opacity: 0.5 + rng() * 0.5,
+        opacity: opacityMin + rng() * (opacityMax - opacityMin),
       })
     }
   }

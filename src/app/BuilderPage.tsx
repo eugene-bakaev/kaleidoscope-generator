@@ -3,6 +3,7 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import { PrimitiveSelector } from "@/components/controls/PrimitiveSelector";
 import { PaletteSelector } from "@/components/controls/PaletteSelector";
 import { DensityControls } from "@/components/controls/DensityControls";
+import { PaletteControls } from "@/components/controls/PaletteControls";
 import { BaseImageSVG } from "@/components/base-image/BaseImageSVG";
 import { TriangleSelector } from "@/components/base-image/TriangleSelector";
 import { KaleidoscopeCanvas } from "@/components/kaleidoscope/KaleidoscopeCanvas";
@@ -13,6 +14,7 @@ import {
   rasterizeSVG,
   type TriangleState,
 } from "@/lib/kaleidoscope";
+import type { ColorStrategy } from "@/lib/generateImage";
 import { PALETTES, getLightestColor, type Palette } from "@/lib/palette";
 import type {
   PrimitiveType,
@@ -43,6 +45,9 @@ export default function BuilderPage() {
   const [palette, setPalette] = useState<Palette>(PALETTES[0]);
   const [count, setCount] = useState(10);
   const [complexity, setComplexity] = useState(0.5);
+  const [opacityMin, setOpacityMin] = useState(0.4);
+  const [opacityMax, setOpacityMax] = useState(1.0);
+  const [colorStrategy, setColorStrategy] = useState<ColorStrategy>('random');
   const [descriptors, setDescriptors] = useState<PrimitiveDescriptor[]>(() =>
     generateImage({
       enabledTypes: ["circles", "dots", "lines", "polygons"],
@@ -50,6 +55,9 @@ export default function BuilderPage() {
       count: 10,
       complexity: 0.5,
       seed: 1,
+      opacityMin: 0.4,
+      opacityMax: 1.0,
+      colorStrategy: 'random',
     }),
   );
   const [triangle, setTriangle] = useState<TriangleState>(INITIAL_TRIANGLE);
@@ -92,9 +100,12 @@ export default function BuilderPage() {
         count,
         complexity,
         seed: newSeed,
+        opacityMin,
+        opacityMax,
+        colorStrategy,
       }),
     );
-  }, [enabledTypes, palette, count, complexity]);
+  }, [enabledTypes, palette, count, complexity, opacityMin, opacityMax, colorStrategy]);
 
   const handleSectorsChange = useCallback((s: number) => {
     setSectors(s);
@@ -203,6 +214,14 @@ export default function BuilderPage() {
             complexity={complexity}
             onCountChange={setCount}
             onComplexityChange={setComplexity}
+          />
+          <PaletteControls
+            opacityMin={opacityMin}
+            opacityMax={opacityMax}
+            colorStrategy={colorStrategy}
+            onOpacityMinChange={setOpacityMin}
+            onOpacityMaxChange={setOpacityMax}
+            onColorStrategyChange={setColorStrategy}
           />
           <button
             onClick={handleGenerate}

@@ -2,7 +2,7 @@
 import type { PrimitiveConfig, PathDescriptor } from './types'
 
 export function generateSpirals(config: PrimitiveConfig): PathDescriptor[] {
-  const { palette, bounds, rng, complexity } = config
+  const { palette, bounds, rng, complexity, opacityMin, opacityMax } = config
   const count = Math.round(1 + complexity * 2)
 
   return Array.from({ length: count }, () => {
@@ -29,7 +29,7 @@ export function generateSpirals(config: PrimitiveConfig): PathDescriptor[] {
       fill: 'none',
       stroke: color,
       strokeWidth: 1 + rng() * 2,
-      opacity: 0.5 + rng() * 0.5,
+      opacity: opacityMin + rng() * (opacityMax - opacityMin),
     }
   })
 }

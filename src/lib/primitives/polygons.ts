@@ -2,7 +2,7 @@
 import type { PrimitiveConfig, PolygonDescriptor } from './types'
 
 export function generatePolygons(config: PrimitiveConfig): PolygonDescriptor[] {
-  const { palette, bounds, rng, complexity } = config
+  const { palette, bounds, rng, complexity, opacityMin, opacityMax } = config
   const count = Math.round(2 + complexity * 6)
 
   return Array.from({ length: count }, () => {
@@ -25,7 +25,7 @@ export function generatePolygons(config: PrimitiveConfig): PolygonDescriptor[] {
       fill: useStroke ? 'none' : color,
       stroke: useStroke ? color : 'none',
       strokeWidth: useStroke ? 1 + rng() * 2 : 0,
-      opacity: 0.4 + rng() * 0.6,
+      opacity: opacityMin + rng() * (opacityMax - opacityMin),
     }
   })
 }

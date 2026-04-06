@@ -20,6 +20,8 @@ export interface PrimitiveConfig {
   bounds: BoundingBox
   rng: Rng
   complexity: number       // 0–1, feeds per-generator params
+  opacityMin: number       // 0–1
+  opacityMax: number       // 0–1, >= opacityMin
 }
 
 export interface CircleDescriptor {

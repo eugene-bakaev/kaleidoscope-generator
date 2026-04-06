@@ -8,6 +8,8 @@ const config = {
   bounds: { width: 500, height: 500 },
   rng: createRandom(3),
   complexity: 0.5,
+  opacityMin: 0.4,
+  opacityMax: 1.0,
 }
 
 describe('generateLines', () => {

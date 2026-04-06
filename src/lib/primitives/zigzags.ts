@@ -2,7 +2,7 @@
 import type { PrimitiveConfig, PolylineDescriptor } from './types'
 
 export function generateZigzags(config: PrimitiveConfig): PolylineDescriptor[] {
-  const { palette, bounds, rng, complexity } = config
+  const { palette, bounds, rng, complexity, opacityMin, opacityMax } = config
   const count = Math.round(1 + complexity * 3)
 
   return Array.from({ length: count }, () => {
@@ -24,7 +24,7 @@ export function generateZigzags(config: PrimitiveConfig): PolylineDescriptor[] {
       stroke: rng.pick(palette),
       strokeWidth: 1 + rng() * 3,
       fill: 'none',
-      opacity: 0.5 + rng() * 0.5,
+      opacity: opacityMin + rng() * (opacityMax - opacityMin),
     }
   })
 }

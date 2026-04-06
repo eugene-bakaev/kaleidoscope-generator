@@ -2,7 +2,7 @@
 import type { PrimitiveConfig, PathDescriptor } from './types'
 
 export function generateSines(config: PrimitiveConfig): PathDescriptor[] {
-  const { palette, bounds, rng, complexity } = config
+  const { palette, bounds, rng, complexity, opacityMin, opacityMax } = config
   const count = Math.round(1 + complexity * 3)
 
   return Array.from({ length: count }, () => {
@@ -25,7 +25,7 @@ export function generateSines(config: PrimitiveConfig): PathDescriptor[] {
       fill: 'none',
       stroke: color,
       strokeWidth: 1 + rng() * 3,
-      opacity: 0.5 + rng() * 0.5,
+      opacity: opacityMin + rng() * (opacityMax - opacityMin),
     }
   })
 }

@@ -2,7 +2,7 @@
 import type { PrimitiveConfig, CircleDescriptor } from './types'
 
 export function generateCircles(config: PrimitiveConfig): CircleDescriptor[] {
-  const { palette, bounds, rng, complexity } = config
+  const { palette, bounds, rng, complexity, opacityMin, opacityMax } = config
   const count = Math.round(3 + complexity * 7)  // 3–10 circles
   const result: CircleDescriptor[] = []
 
@@ -19,7 +19,7 @@ export function generateCircles(config: PrimitiveConfig): CircleDescriptor[] {
       fill: useStroke ? 'none' : color,
       stroke: useStroke ? color : 'none',
       strokeWidth: useStroke ? 1 + rng() * 3 : 0,
-      opacity: 0.4 + rng() * 0.6,
+      opacity: opacityMin + rng() * (opacityMax - opacityMin),
     })
   }
 

@@ -2,7 +2,7 @@
 import type { PrimitiveConfig, LineDescriptor } from './types'
 
 export function generateLines(config: PrimitiveConfig): LineDescriptor[] {
-  const { palette, bounds, rng, complexity } = config
+  const { palette, bounds, rng, complexity, opacityMin, opacityMax } = config
   const count = Math.round(3 + complexity * 10)
 
   return Array.from({ length: count }, () => {
@@ -17,7 +17,7 @@ export function generateLines(config: PrimitiveConfig): LineDescriptor[] {
       y2: y1 + Math.sin(angle) * length,
       stroke: rng.pick(palette),
       strokeWidth: 1 + rng() * 3,
-      opacity: 0.4 + rng() * 0.6,
+      opacity: opacityMin + rng() * (opacityMax - opacityMin),
     }
   })
 }
