@@ -1,6 +1,6 @@
 'use client'
-import React from 'react'
-import { PALETTES, type Palette } from '@/lib/palette'
+import React, { useState } from 'react'
+import { PALETTES, generateRandomPalette, type Palette } from '@/lib/palette'
 
 interface Props {
   selected: Palette
@@ -8,6 +8,14 @@ interface Props {
 }
 
 export function PaletteSelector({ selected, onChange }: Props) {
+  const [randomPalette, setRandomPalette] = useState<Palette>(() => generateRandomPalette())
+
+  const handleRegenRandom = () => {
+    const next = generateRandomPalette()
+    setRandomPalette(next)
+    if (selected.id === 'random') onChange(next)
+  }
+
   return (
     <div className="flex flex-col gap-2">
       <span className="label">Palette</span>
@@ -26,6 +34,28 @@ export function PaletteSelector({ selected, onChange }: Props) {
             ))}
           </button>
         ))}
+
+        {/* Random palette */}
+        <div className="flex gap-1 items-center">
+          <button
+            onClick={() => onChange(randomPalette)}
+            title="Random"
+            className={`flex-1 h-6 rounded flex overflow-hidden border-2 transition-colors ${
+              selected.id === 'random' ? 'border-violet-400' : 'border-transparent'
+            }`}
+          >
+            {randomPalette.colors.map(color => (
+              <div key={color} className="flex-1 h-full" style={{ background: color }} />
+            ))}
+          </button>
+          <button
+            onClick={handleRegenRandom}
+            title="New random palette"
+            className="control-btn px-1.5"
+          >
+            ↺
+          </button>
+        </div>
       </div>
     </div>
   )

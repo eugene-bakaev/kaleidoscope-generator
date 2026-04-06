@@ -2,7 +2,7 @@
 import type { PrimitiveType, PrimitiveDescriptor } from './primitives/types'
 import { GENERATORS } from './primitives/index'
 import { createRandom } from './primitives/random'
-import type { Palette } from './palette'
+import { PALETTES, type Palette } from './palette'
 
 export type ColorStrategy = 'random' | 'sequential' | 'by-type'
 
@@ -59,6 +59,6 @@ function selectColors(
     }
     case 'random':
     default:
-      return colors
+      return PALETTES.flatMap(p => p.colors)
   }
 }

@@ -44,6 +44,14 @@ export const PALETTES: Palette[] = [
   },
 ]
 
+/** Generates a palette with N random hex colors. */
+export function generateRandomPalette(): Palette {
+  const colors = Array.from({ length: 6 }, () =>
+    '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0')
+  )
+  return { id: 'random', name: 'Random', colors }
+}
+
 /** Returns the hex color with the lowest perceived luminance. */
 export function getDarkestColor(colors: string[]): string {
   return colors.reduce((darkest, color) => {
