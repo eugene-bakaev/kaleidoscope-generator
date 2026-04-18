@@ -101,19 +101,19 @@ export function TriangleSelector({ state, onChange, svgSize, sectors, pivot, piv
         {hovered && (
           <circle
             cx={apex.x} cy={apex.y} r={28}
-            fill="none" stroke="#ffd700" strokeWidth={1}
-            strokeDasharray="4 3" opacity={0.55}
+            fill="none" stroke="#0b0b0f" strokeWidth={1.2}
+            strokeDasharray="2 3" opacity={0.55}
             style={{ pointerEvents: 'none' }}
           />
         )}
 
-        {/* Triangle */}
+        {/* Triangle — white halo + dark dashed line for contrast on any background */}
         <polygon
           points={points}
-          fill="rgba(255,215,0,0.06)"
-          stroke="#ffd700"
-          strokeWidth="2"
-          strokeDasharray="6 3"
+          fill="none"
+          stroke="#fff"
+          strokeWidth={4}
+          opacity={0.6}
           style={{ pointerEvents: 'all', cursor: 'move' }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -121,14 +121,22 @@ export function TriangleSelector({ state, onChange, svgSize, sectors, pivot, piv
           onPointerEnter={() => setHovered(true)}
           onPointerLeave={() => setHovered(false)}
         />
+        <polygon
+          points={points}
+          fill="none"
+          stroke="#0b0b0f"
+          strokeWidth={2}
+          strokeDasharray="6 4"
+          style={{ pointerEvents: 'none' }}
+        />
 
         {/* Base corner handles */}
-        <rect x={h1.x - 4} y={h1.y - 4} width={8} height={8} fill="#ffd700" style={{ pointerEvents: 'none' }} />
-        <rect x={h2.x - 4} y={h2.y - 4} width={8} height={8} fill="#ffd700" style={{ pointerEvents: 'none' }} />
+        <rect x={h1.x - 4} y={h1.y - 4} width={8} height={8} fill="#0b0b0f" stroke="#fff" strokeWidth={1} style={{ pointerEvents: 'none' }} />
+        <rect x={h2.x - 4} y={h2.y - 4} width={8} height={8} fill="#0b0b0f" stroke="#fff" strokeWidth={1} style={{ pointerEvents: 'none' }} />
 
-        {/* Apex dot */}
-        <circle cx={apex.x} cy={apex.y} r={5} fill="#ffd700" style={{ pointerEvents: 'none' }} />
-        <circle cx={apex.x} cy={apex.y} r={2} fill="#000" style={{ pointerEvents: 'none' }} />
+        {/* Apex pin */}
+        <circle cx={apex.x} cy={apex.y} r={8} fill="#0b0b0f" stroke="#fff" strokeWidth={1.5} style={{ pointerEvents: 'none' }} />
+        <circle cx={apex.x} cy={apex.y} r={3} fill="#facc15" style={{ pointerEvents: 'none' }} />
 
         {/* Pivot marker — always visible */}
         <line
