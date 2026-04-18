@@ -1,6 +1,6 @@
 // tests/lib/palette.test.ts
 import { describe, it, expect } from 'vitest'
-import { PALETTES, getDarkestColor } from '@/lib/palette'
+import { PALETTES, getLightestColor } from '@/lib/palette'
 
 describe('PALETTES', () => {
   it('has at least 6 palettes', () => {
@@ -29,9 +29,9 @@ describe('PALETTES', () => {
   })
 })
 
-describe('getDarkestColor', () => {
-  it('returns the darkest hex color from the palette', () => {
-    const dark = getDarkestColor(['#ffffff', '#000000', '#888888'])
-    expect(dark).toBe('#000000')
+describe('getLightestColor', () => {
+  it('returns the lightest hex color from the list', () => {
+    const light = getLightestColor(['#ffffff', '#000000', '#888888'])
+    expect(light).toBe('#ffffff')
   })
 })

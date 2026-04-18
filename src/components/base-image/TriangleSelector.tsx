@@ -1,9 +1,9 @@
 'use client'
-import React, { useRef, useCallback, useState } from 'react'
+import React, { useRef, useCallback, useState, useMemo } from 'react'
 import type { TriangleState } from '@/lib/kaleidoscope'
 import { triangleVertices } from '@/lib/kaleidoscope'
 
-type PivotMode = 'apex' | 'left' | 'right' | 'custom'
+export type PivotMode = 'apex' | 'left' | 'right' | 'custom'
 
 interface Props {
   state: TriangleState
@@ -35,11 +35,11 @@ export function TriangleSelector({ state, onChange, svgSize, sectors, pivot, piv
   const svgRef = useRef<SVGSVGElement | null>(null)
   const [hovered, setHovered] = useState(false)
 
-  const vertices = triangleVertices(state, sectors)
-  const points = vertices.map(v => `${v.x},${v.y}`).join(' ')
-  const apex = vertices[0]
-  const h1 = vertices[1]
-  const h2 = vertices[2]
+  const [vertices, points] = useMemo(() => {
+    const v = triangleVertices(state, sectors)
+    return [v, v.map(p => `${p.x},${p.y}`).join(' ')] as const
+  }, [state, sectors])
+  const [apex, h1, h2] = vertices
 
   const svgPoint = useCallback((e: React.PointerEvent): { x: number; y: number } | null => {
     const svg = svgRef.current

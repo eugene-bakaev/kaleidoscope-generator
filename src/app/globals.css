@@ -32,6 +32,15 @@
     background: rgba(255, 255, 255, 0.1);
   }
 
+  .btn-accent {
+    background: var(--accent);
+    transition: background 0.15s;
+  }
+  .btn-accent:hover,
+  .btn-accent:focus-visible {
+    background: var(--accent-dim);
+  }
+
   .label {
     font-size: 0.625rem;
     color: var(--text-dim);

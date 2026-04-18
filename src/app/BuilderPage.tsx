@@ -1,12 +1,12 @@
 'use client'
-import React, { useState, useRef, useCallback, useEffect } from 'react'
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { PrimitiveSelector } from '@/components/controls/PrimitiveSelector'
 import { PaletteSelector } from '@/components/controls/PaletteSelector'
 import { DensityControls } from '@/components/controls/DensityControls'
 import { PaletteControls } from '@/components/controls/PaletteControls'
 import { CollapsibleSection } from '@/components/controls/CollapsibleSection'
 import { BaseImageSVG } from '@/components/base-image/BaseImageSVG'
-import { TriangleSelector } from '@/components/base-image/TriangleSelector'
+import { TriangleSelector, type PivotMode } from '@/components/base-image/TriangleSelector'
 import { KaleidoscopeCanvas } from '@/components/kaleidoscope/KaleidoscopeCanvas'
 import { SectorControls } from '@/components/kaleidoscope/SectorControls'
 import { generateImage, effectivePrimitiveCount } from '@/lib/generateImage'
@@ -53,7 +53,7 @@ export default function BuilderPage() {
   const [flip, setFlip] = useState(true)
   const [isPlaying, setIsPlaying] = useState(false)
   const [interval, setInterval_] = useState(100)
-  const [pivotMode, setPivotMode] = useState<'apex' | 'left' | 'right' | 'custom'>('apex')
+  const [pivotMode, setPivotMode] = useState<PivotMode>('apex')
   const [pivot, setPivot] = useState({ x: INITIAL_SVG_SIZE / 2, y: INITIAL_SVG_SIZE / 2 })
 
   const svgRef = useRef<SVGSVGElement>(null)
@@ -66,14 +66,15 @@ export default function BuilderPage() {
   const svgSizeRef = useRef(svgSize)
   const pivotRef = useRef(pivot)
 
-  useEffect(() => { triangleRef.current = triangle }, [triangle])
-  useEffect(() => { sectorsRef.current = sectors }, [sectors])
-  useEffect(() => { flipRef.current = flip }, [flip])
-  useEffect(() => { intervalRef.current = interval }, [interval])
-  useEffect(() => { svgSizeRef.current = svgSize }, [svgSize])
-  useEffect(() => { pivotRef.current = pivot }, [pivot])
+  // Keep latest-value refs in sync during render — always current before any handler fires
+  triangleRef.current = triangle
+  sectorsRef.current = sectors
+  flipRef.current = flip
+  intervalRef.current = interval
+  svgSizeRef.current = svgSize
+  pivotRef.current = pivot
 
-  const background = getLightestColor(palette.colors)
+  const background = useMemo(() => getLightestColor(palette.colors), [palette])
 
   // Rasterize SVG and store in offscreenRef
   const rasterize = useCallback(async (): Promise<HTMLCanvasElement | null> => {
@@ -135,7 +136,7 @@ export default function BuilderPage() {
   }, [enabledTypes, palette, count, complexity, opacityMin, opacityMax, svgSize])
 
   // Compute the snapped pivot position for non-custom modes
-  const computeSnappedPivot = useCallback((t: TriangleState, mode: typeof pivotMode, s: number) => {
+  const computeSnappedPivot = useCallback((t: TriangleState, mode: PivotMode, s: number) => {
     if (mode === 'custom') return null
     const verts = triangleVertices(t, s)
     if (mode === 'apex')  return verts[0]
@@ -152,7 +153,7 @@ export default function BuilderPage() {
   }, [pivotMode, computeSnappedPivot])
 
   // Snap pivot to new corner when mode changes
-  const handlePivotModeChange = useCallback((mode: typeof pivotMode) => {
+  const handlePivotModeChange = useCallback((mode: PivotMode) => {
     setPivotMode(mode)
     if (mode !== 'custom') {
       const snapped = computeSnappedPivot(triangleRef.current, mode, sectorsRef.current)
@@ -236,16 +237,13 @@ export default function BuilderPage() {
           <CollapsibleSection title="Color">
             <PaletteControls
               opacityMin={opacityMin} opacityMax={opacityMax}
-              onOpacityMinChange={setOpacityMin} onOpacityMaxChange={setOpacityMax}
+              onOpacityChange={(min, max) => { setOpacityMin(min); setOpacityMax(max) }}
             />
           </CollapsibleSection>
           <div className="mt-auto p-3" style={{ borderTop: '1px solid var(--border)' }}>
             <button
               onClick={handleGenerate}
-              className="w-full py-2 rounded text-sm font-medium text-white transition-colors"
-              style={{ background: 'var(--accent)' }}
-              onMouseOver={e => (e.currentTarget.style.background = 'var(--accent-dim)')}
-              onMouseOut={e => (e.currentTarget.style.background = 'var(--accent)')}
+              className="btn-accent w-full py-2 rounded text-sm font-medium text-white"
             >
               Generate
             </button>
@@ -311,10 +309,8 @@ export default function BuilderPage() {
             </div>
             <button
               onClick={handlePlay}
-              className="w-full py-2 rounded text-sm font-medium text-white transition-colors"
-              style={{ background: isPlaying ? 'var(--accent-dim)' : 'var(--accent)' }}
-              onMouseOver={e => (e.currentTarget.style.background = 'var(--accent-dim)')}
-              onMouseOut={e => (e.currentTarget.style.background = isPlaying ? 'var(--accent-dim)' : 'var(--accent)')}
+              className="btn-accent w-full py-2 rounded text-sm font-medium text-white"
+              style={isPlaying ? { background: 'var(--accent-dim)' } : undefined}
             >
               {isPlaying ? 'Stop' : '▶ Play'}
             </button>

@@ -4,14 +4,10 @@ import React from 'react'
 interface Props {
   opacityMin: number
   opacityMax: number
-  onOpacityMinChange: (v: number) => void
-  onOpacityMaxChange: (v: number) => void
+  onOpacityChange: (min: number, max: number) => void
 }
 
-export function PaletteControls({
-  opacityMin, opacityMax,
-  onOpacityMinChange, onOpacityMaxChange,
-}: Props) {
+export function PaletteControls({ opacityMin, opacityMax, onOpacityChange }: Props) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
@@ -24,8 +20,7 @@ export function PaletteControls({
           value={Math.round(opacityMin * 100)}
           onChange={e => {
             const v = Number(e.target.value) / 100
-            onOpacityMinChange(v)
-            if (v > opacityMax) onOpacityMaxChange(v)
+            onOpacityChange(v, Math.max(v, opacityMax))
           }}
           className="w-full accent-violet-500"
         />
@@ -41,8 +36,7 @@ export function PaletteControls({
           value={Math.round(opacityMax * 100)}
           onChange={e => {
             const v = Number(e.target.value) / 100
-            onOpacityMaxChange(v)
-            if (v < opacityMin) onOpacityMinChange(v)
+            onOpacityChange(Math.min(v, opacityMin), v)
           }}
           className="w-full accent-violet-500"
         />

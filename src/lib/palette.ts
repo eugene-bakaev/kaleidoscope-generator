@@ -60,13 +60,6 @@ export function generateFullRandomPalette(count: number): Palette {
   return { id: 'full-random', name: 'Full Random', colors }
 }
 
-/** Returns the hex color with the lowest perceived luminance. */
-export function getDarkestColor(colors: string[]): string {
-  return colors.reduce((darkest, color) => {
-    return luminance(color) < luminance(darkest) ? color : darkest
-  })
-}
-
 /** Returns the hex color with the highest perceived luminance. */
 export function getLightestColor(colors: string[]): string {
   return colors.reduce((lightest, color) => {
