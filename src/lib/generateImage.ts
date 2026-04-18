@@ -4,6 +4,13 @@ import { GENERATORS } from './primitives/index'
 import { createRandom } from './primitives/random'
 import { type Palette } from './palette'
 
+const BASE_SVG_SIZE = 500
+
+/** Scales primitive count with canvas area so density stays consistent across svg sizes. */
+export function effectivePrimitiveCount(count: number, svgSize: number): number {
+  return Math.round(count * (svgSize / BASE_SVG_SIZE) ** 2)
+}
+
 export interface GenerateImageConfig {
   enabledTypes: readonly PrimitiveType[]
   palette: Palette
@@ -20,7 +27,9 @@ export function generateImage(config: GenerateImageConfig): PrimitiveDescriptor[
   const rng = createRandom(seed)
   const result: PrimitiveDescriptor[] = []
 
-  for (let i = 0; i < count; i++) {
+  const effectiveCount = effectivePrimitiveCount(count, svgSize)
+
+  for (let i = 0; i < effectiveCount; i++) {
     const type = rng.pick([...enabledTypes])
     const generator = GENERATORS[type]
 

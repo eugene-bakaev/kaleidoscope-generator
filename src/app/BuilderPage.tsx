@@ -9,7 +9,7 @@ import { BaseImageSVG } from '@/components/base-image/BaseImageSVG'
 import { TriangleSelector } from '@/components/base-image/TriangleSelector'
 import { KaleidoscopeCanvas } from '@/components/kaleidoscope/KaleidoscopeCanvas'
 import { SectorControls } from '@/components/kaleidoscope/SectorControls'
-import { generateImage } from '@/lib/generateImage'
+import { generateImage, effectivePrimitiveCount } from '@/lib/generateImage'
 import { renderKaleidoscope, rasterizeSVG, rotateAroundPivot, triangleVertices, type TriangleState } from '@/lib/kaleidoscope'
 import { PALETTES, getLightestColor, generateFullRandomPalette, type Palette } from '@/lib/palette'
 import type { PrimitiveType, PrimitiveDescriptor } from '@/lib/primitives/types'
@@ -129,7 +129,7 @@ export default function BuilderPage() {
   const handleGenerate = useCallback(() => {
     const newSeed = Math.floor(Math.random() * 0xffffffff)
     setSeed(newSeed)
-    const p = palette.id === 'full-random' ? generateFullRandomPalette(count) : palette
+    const p = palette.id === 'full-random' ? generateFullRandomPalette(effectivePrimitiveCount(count, svgSize)) : palette
     if (p !== palette) setPalette(p)
     setDescriptors(generateImage({ enabledTypes, palette: p, count, complexity, seed: newSeed, opacityMin, opacityMax, svgSize }))
   }, [enabledTypes, palette, count, complexity, opacityMin, opacityMax, svgSize])
@@ -228,7 +228,7 @@ export default function BuilderPage() {
             <PrimitiveSelector selected={enabledTypes} onChange={setEnabledTypes} />
           </CollapsibleSection>
           <CollapsibleSection title="Palette">
-            <PaletteSelector selected={palette} count={count} onChange={setPalette} />
+            <PaletteSelector selected={palette} count={effectivePrimitiveCount(count, svgSize)} onChange={setPalette} />
           </CollapsibleSection>
           <CollapsibleSection title="Density">
             <DensityControls count={count} complexity={complexity} onCountChange={setCount} onComplexityChange={setComplexity} />
