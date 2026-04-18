@@ -30,9 +30,8 @@ export function PrimitiveSelector({ selected, onChange }: Props) {
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="label">Primitives</span>
       {ALL_TYPES.map(({ type, label }) => (
-        <label key={type} className="flex items-center gap-2 cursor-pointer text-sm text-neutral-300 hover:text-white">
+        <label key={type} className="flex items-center gap-2 cursor-pointer text-sm hover:text-white" style={{ color: 'var(--text)' }}>
           <input
             type="checkbox"
             role="checkbox"

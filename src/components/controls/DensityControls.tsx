@@ -14,7 +14,7 @@ export function DensityControls({ count, complexity, onCountChange, onComplexity
       <div className="flex flex-col gap-1">
         <label className="label flex justify-between">
           <span>Density</span>
-          <span className="text-neutral-400">{count}</span>
+          <span style={{ color: 'var(--text-dim)', fontFamily: 'monospace', fontSize: 10 }}>{count}</span>
         </label>
         <input
           type="range"
@@ -29,7 +29,7 @@ export function DensityControls({ count, complexity, onCountChange, onComplexity
       <div className="flex flex-col gap-1">
         <label className="label flex justify-between">
           <span>Complexity</span>
-          <span className="text-neutral-400">{Math.round(complexity * 100)}%</span>
+          <span style={{ color: 'var(--text-dim)', fontFamily: 'monospace', fontSize: 10 }}>{Math.round(complexity * 100)}%</span>
         </label>
         <input
           type="range"

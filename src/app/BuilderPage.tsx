@@ -1,56 +1,46 @@
-"use client";
-import React, { useState, useRef, useCallback, useEffect } from "react";
-import { PrimitiveSelector } from "@/components/controls/PrimitiveSelector";
-import { PaletteSelector } from "@/components/controls/PaletteSelector";
-import { DensityControls } from "@/components/controls/DensityControls";
-import { PaletteControls } from "@/components/controls/PaletteControls";
-import { BaseImageSVG } from "@/components/base-image/BaseImageSVG";
-import { TriangleSelector } from "@/components/base-image/TriangleSelector";
-import { KaleidoscopeCanvas } from "@/components/kaleidoscope/KaleidoscopeCanvas";
-import { SectorControls } from "@/components/kaleidoscope/SectorControls";
-import { generateImage } from "@/lib/generateImage";
-import {
-  renderKaleidoscope,
-  rasterizeSVG,
-  type TriangleState,
-} from "@/lib/kaleidoscope";
-import type { ColorStrategy } from "@/lib/generateImage";
-import { PALETTES, getLightestColor, type Palette } from "@/lib/palette";
-import type {
-  PrimitiveType,
-  PrimitiveDescriptor,
-} from "@/lib/primitives/types";
+'use client'
+import React, { useState, useRef, useCallback, useEffect } from 'react'
+import { PrimitiveSelector } from '@/components/controls/PrimitiveSelector'
+import { PaletteSelector } from '@/components/controls/PaletteSelector'
+import { DensityControls } from '@/components/controls/DensityControls'
+import { PaletteControls } from '@/components/controls/PaletteControls'
+import { CollapsibleSection } from '@/components/controls/CollapsibleSection'
+import { BaseImageSVG } from '@/components/base-image/BaseImageSVG'
+import { TriangleSelector } from '@/components/base-image/TriangleSelector'
+import { KaleidoscopeCanvas } from '@/components/kaleidoscope/KaleidoscopeCanvas'
+import { SectorControls } from '@/components/kaleidoscope/SectorControls'
+import { generateImage } from '@/lib/generateImage'
+import { renderKaleidoscope, rasterizeSVG, type TriangleState } from '@/lib/kaleidoscope'
+import type { ColorStrategy } from '@/lib/generateImage'
+import { PALETTES, getLightestColor, type Palette } from '@/lib/palette'
+import type { PrimitiveType, PrimitiveDescriptor } from '@/lib/primitives/types'
 
-const SVG_SIZE = 500;
-const INITIAL_SECTORS = 8;
-const ROTATE_STEP = (5 * Math.PI) / 180;
+const SVG_SIZE = 500
+const INITIAL_SECTORS = 8
+const ROTATE_STEP = (5 * Math.PI) / 180
 
-const triangleSizeForSectors = (n: number) =>
-  (SVG_SIZE / 2) * Math.tan(Math.PI / n);
+const triangleSizeForSectors = (n: number) => (SVG_SIZE / 2) * Math.tan(Math.PI / n)
 
 const INITIAL_TRIANGLE: TriangleState = {
   cx: SVG_SIZE / 2,
   cy: SVG_SIZE / 2,
   angle: 0,
   size: triangleSizeForSectors(INITIAL_SECTORS),
-};
+}
+
+const ALL_TYPES: PrimitiveType[] = ['circles', 'concentricCircles', 'spirals', 'zigzags', 'lines', 'dots', 'polygons', 'sines']
 
 export default function BuilderPage() {
-  const [enabledTypes, setEnabledTypes] = useState<PrimitiveType[]>([
-    "circles",
-    "dots",
-    "lines",
-    "polygons",
-  ]);
-  const [palette, setPalette] = useState<Palette>(PALETTES[0]);
-  const [count, setCount] = useState(10);
-  const [complexity, setComplexity] = useState(0.5);
-  const [opacityMin, setOpacityMin] = useState(0.4);
-  const [opacityMax, setOpacityMax] = useState(1.0);
-  const [colorStrategy, setColorStrategy] = useState<ColorStrategy>('random');
+  const [enabledTypes, setEnabledTypes] = useState<PrimitiveType[]>(['circles', 'dots', 'lines', 'polygons'])
+  const [palette, setPalette] = useState<Palette>(PALETTES[0])
+  const [count, setCount] = useState(10)
+  const [complexity, setComplexity] = useState(0.5)
+  const [opacityMin, setOpacityMin] = useState(0.4)
+  const [opacityMax, setOpacityMax] = useState(1.0)
+  const [colorStrategy, setColorStrategy] = useState<ColorStrategy>('random')
   const [descriptors, setDescriptors] = useState<PrimitiveDescriptor[]>(() =>
     generateImage({
-      enabledTypes: ["circles", "dots", "lines", "polygons"],
+      enabledTypes: ['circles', 'dots', 'lines', 'polygons'],
       palette: PALETTES[0],
       count: 10,
       complexity: 0.5,
@@ -58,244 +48,203 @@ export default function BuilderPage() {
       opacityMin: 0.4,
       opacityMax: 1.0,
       colorStrategy: 'random',
-    }),
-  );
-  const [triangle, setTriangle] = useState<TriangleState>(INITIAL_TRIANGLE);
-  const [sectors, setSectors] = useState(INITIAL_SECTORS);
-  const [flip, setFlip] = useState(true);
-  const [isApplying, setIsApplying] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [interval, setInterval_] = useState(100);
-  const intervalRef = useRef(100);
+    })
+  )
+  const [triangle, setTriangle] = useState<TriangleState>(INITIAL_TRIANGLE)
+  const [sectors, setSectors] = useState(INITIAL_SECTORS)
+  const [flip, setFlip] = useState(true)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [interval, setInterval_] = useState(100)
 
-  const svgRef = useRef<SVGSVGElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const offscreenRef = useRef<HTMLCanvasElement | null>(null);
-  const triangleRef = useRef(triangle);
-  const sectorsRef = useRef(sectors);
-  const flipRef = useRef(flip);
+  const svgRef = useRef<SVGSVGElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const offscreenRef = useRef<HTMLCanvasElement | null>(null)
+  const triangleRef = useRef(triangle)
+  const sectorsRef = useRef(sectors)
+  const flipRef = useRef(flip)
+  const intervalRef = useRef(interval)
 
-  // Keep refs in sync with state
-  useEffect(() => {
-    triangleRef.current = triangle;
-  }, [triangle]);
-  useEffect(() => {
-    sectorsRef.current = sectors;
-  }, [sectors]);
-  useEffect(() => {
-    flipRef.current = flip;
-  }, [flip]);
-  useEffect(() => {
-    intervalRef.current = interval;
-  }, [interval]);
+  useEffect(() => { triangleRef.current = triangle }, [triangle])
+  useEffect(() => { sectorsRef.current = sectors }, [sectors])
+  useEffect(() => { flipRef.current = flip }, [flip])
+  useEffect(() => { intervalRef.current = interval }, [interval])
 
-  const background = getLightestColor(palette.colors);
+  const background = getLightestColor(palette.colors)
+
+  // Rasterize SVG and store in offscreenRef
+  const rasterize = useCallback(async (): Promise<HTMLCanvasElement | null> => {
+    const canvas = canvasRef.current
+    const svg = svgRef.current
+    if (!canvas || !svg) return null
+    const dpr = (window.devicePixelRatio || 1) * 2
+    const cssSize = Math.min(canvas.clientWidth, canvas.clientHeight) || SVG_SIZE
+    const px = Math.round(cssSize * dpr)
+    canvas.width = px
+    canvas.height = px
+    const svgString = new XMLSerializer().serializeToString(svg)
+    return rasterizeSVG(svgString, px, px)
+  }, [])
+
+  // Render kaleidoscope synchronously from current state
+  const renderNow = useCallback((t = triangleRef.current, s = sectorsRef.current, f = flipRef.current) => {
+    const canvas = canvasRef.current
+    const offscreen = offscreenRef.current
+    if (!canvas || !offscreen) return
+    renderKaleidoscope({ canvas, offscreenCanvas: offscreen, triangle: t, sectors: s, flip: f })
+  }, [])
+
+  // Re-rasterize whenever the base image changes, then re-render
+  useEffect(() => {
+    const id = setTimeout(async () => {
+      const offscreen = await rasterize()
+      if (offscreen) {
+        offscreenRef.current = offscreen
+        renderNow()
+      }
+    }, 50)
+    return () => clearTimeout(id)
+  }, [descriptors, background, rasterize, renderNow])
+
+  // Live preview — re-render on triangle/sectors/flip change
+  useEffect(() => {
+    if (offscreenRef.current) renderNow(triangle, sectors, flip)
+  }, [triangle, sectors, flip, renderNow])
 
   const handleGenerate = useCallback(() => {
-    const newSeed = Math.floor(Math.random() * 0xffffffff);
-    setDescriptors(
-      generateImage({
-        enabledTypes,
-        palette,
-        count,
-        complexity,
-        seed: newSeed,
-        opacityMin,
-        opacityMax,
-        colorStrategy,
-      }),
-    );
-  }, [enabledTypes, palette, count, complexity, opacityMin, opacityMax, colorStrategy]);
+    const newSeed = Math.floor(Math.random() * 0xffffffff)
+    setDescriptors(generateImage({ enabledTypes, palette, count, complexity, seed: newSeed, opacityMin, opacityMax, colorStrategy }))
+  }, [enabledTypes, palette, count, complexity, opacityMin, opacityMax, colorStrategy])
 
   const handleSectorsChange = useCallback((s: number) => {
-    setSectors(s);
-    setTriangle((t) => ({ ...t, size: triangleSizeForSectors(s) }));
-  }, []);
-
-  const prepareCanvas =
-    useCallback(async (): Promise<HTMLCanvasElement | null> => {
-      const canvas = canvasRef.current;
-      const svg = svgRef.current;
-      if (!canvas || !svg) return null;
-      const dpr = (window.devicePixelRatio || 1) * 2;
-      const cssSize =
-        Math.min(canvas.clientWidth, canvas.clientHeight) || SVG_SIZE;
-      const px = Math.round(cssSize * dpr);
-      canvas.width = px;
-      canvas.height = px;
-      const svgString = new XMLSerializer().serializeToString(svg);
-      return rasterizeSVG(svgString, px, px);
-    }, []);
-
-  const handleApply = useCallback(async () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    setIsApplying(true);
-    try {
-      const offscreen = await prepareCanvas();
-      if (!offscreen) return;
-      offscreenRef.current = offscreen;
-      renderKaleidoscope({
-        canvas,
-        offscreenCanvas: offscreen,
-        triangle,
-        sectors,
-        flip,
-      });
-    } finally {
-      setIsApplying(false);
-    }
-  }, [triangle, sectors, flip, prepareCanvas]);
+    setSectors(s)
+    setTriangle(t => ({ ...t, size: triangleSizeForSectors(s) }))
+  }, [])
 
   const handlePlay = useCallback(async () => {
-    if (isPlaying) {
-      setIsPlaying(false);
-      return;
+    if (isPlaying) { setIsPlaying(false); return }
+    // Ensure offscreen canvas is ready
+    if (!offscreenRef.current) {
+      const offscreen = await rasterize()
+      if (!offscreen) return
+      offscreenRef.current = offscreen
     }
-    // Rasterize SVG once before starting playback
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    setIsApplying(true);
-    try {
-      const offscreen = await prepareCanvas();
-      if (!offscreen) return;
-      offscreenRef.current = offscreen;
-    } finally {
-      setIsApplying(false);
-    }
-    setIsPlaying(true);
-  }, [isPlaying, prepareCanvas]);
+    setIsPlaying(true)
+  }, [isPlaying, rasterize])
 
-  // Animation loop — runs when isPlaying, restarts when interval changes
+  // Animation loop
   useEffect(() => {
-    if (!isPlaying) return;
+    if (!isPlaying) return
     const id = window.setInterval(() => {
-      const next: TriangleState = {
-        ...triangleRef.current,
-        angle: triangleRef.current.angle + ROTATE_STEP,
-      };
-      triangleRef.current = next;
-      setTriangle(next);
-      const canvas = canvasRef.current;
-      const offscreen = offscreenRef.current;
+      const next: TriangleState = { ...triangleRef.current, angle: triangleRef.current.angle + ROTATE_STEP }
+      triangleRef.current = next
+      setTriangle(next)
+      const canvas = canvasRef.current
+      const offscreen = offscreenRef.current
       if (canvas && offscreen) {
-        renderKaleidoscope({
-          canvas,
-          offscreenCanvas: offscreen,
-          triangle: next,
-          sectors: sectorsRef.current,
-          flip: flipRef.current,
-        });
+        renderKaleidoscope({ canvas, offscreenCanvas: offscreen, triangle: next, sectors: sectorsRef.current, flip: flipRef.current })
       }
-    }, intervalRef.current);
-    return () => window.clearInterval(id);
-  }, [isPlaying, interval]);
+    }, intervalRef.current)
+    return () => window.clearInterval(id)
+  }, [isPlaying, interval])
+
+  const fps = Math.round(1000 / interval)
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col" style={{ background: 'var(--bg)' }}>
       {/* Header */}
-      <header className="flex items-center px-6 py-3 border-b border-neutral-800">
-        <h1 className="text-sm font-semibold tracking-widest text-neutral-300 uppercase">
+      <header className="flex items-center px-6 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+        <h1 style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: 'var(--text)', textTransform: 'uppercase' }}>
           Kaleidoscope
         </h1>
       </header>
 
       {/* Three-column layout */}
       <div className="flex-1 grid grid-cols-[220px_1fr_1fr] overflow-hidden">
+
         {/* Left panel — controls */}
-        <aside className="flex flex-col gap-6 p-4 border-r border-neutral-800 overflow-y-auto">
-          <PrimitiveSelector
-            selected={enabledTypes}
-            onChange={setEnabledTypes}
-          />
-          <PaletteSelector selected={palette} onChange={setPalette} />
-          <DensityControls
-            count={count}
-            complexity={complexity}
-            onCountChange={setCount}
-            onComplexityChange={setComplexity}
-          />
-          <PaletteControls
-            opacityMin={opacityMin}
-            opacityMax={opacityMax}
-            colorStrategy={colorStrategy}
-            onOpacityMinChange={setOpacityMin}
-            onOpacityMaxChange={setOpacityMax}
-            onColorStrategyChange={setColorStrategy}
-          />
-          <button
-            onClick={handleGenerate}
-            className="mt-auto bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium py-2 rounded transition-colors"
-          >
-            Generate
-          </button>
+        <aside className="flex flex-col overflow-y-auto" style={{ background: 'var(--panel)', borderRight: '1px solid var(--border)' }}>
+          <CollapsibleSection title="Composition" hint={`${enabledTypes.length} of ${ALL_TYPES.length}`}>
+            <PrimitiveSelector selected={enabledTypes} onChange={setEnabledTypes} />
+          </CollapsibleSection>
+          <CollapsibleSection title="Palette">
+            <PaletteSelector selected={palette} onChange={setPalette} />
+          </CollapsibleSection>
+          <CollapsibleSection title="Density">
+            <DensityControls count={count} complexity={complexity} onCountChange={setCount} onComplexityChange={setComplexity} />
+          </CollapsibleSection>
+          <CollapsibleSection title="Color">
+            <PaletteControls
+              opacityMin={opacityMin} opacityMax={opacityMax} colorStrategy={colorStrategy}
+              onOpacityMinChange={setOpacityMin} onOpacityMaxChange={setOpacityMax} onColorStrategyChange={setColorStrategy}
+            />
+          </CollapsibleSection>
+          <div className="mt-auto p-3" style={{ borderTop: '1px solid var(--border)' }}>
+            <button
+              onClick={handleGenerate}
+              className="w-full py-2 rounded text-sm font-medium text-white transition-colors"
+              style={{ background: 'var(--accent)' }}
+              onMouseOver={e => (e.currentTarget.style.background = 'var(--accent-dim)')}
+              onMouseOut={e => (e.currentTarget.style.background = 'var(--accent)')}
+            >
+              Generate
+            </button>
+          </div>
         </aside>
 
         {/* Center panel — base image + triangle selector */}
-        <section className="flex flex-col p-4 border-r border-neutral-800 gap-3 overflow-hidden">
-          <span className="label">Base Image</span>
-          <div className="relative flex-1 bg-neutral-900 rounded overflow-hidden">
-            <BaseImageSVG
-              descriptors={descriptors}
-              background={background}
-              svgRef={svgRef}
-            />
+        <section className="flex flex-col gap-3 overflow-hidden" style={{ borderRight: '1px solid var(--border)' }}>
+          {/* Toolbar */}
+          <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: '1px solid var(--border)' }}>
+            <div className="flex items-center gap-2">
+              <span className="label">Base Image</span>
+              <span className="flex items-center gap-1" style={{ fontSize: 10, color: '#4ade80', fontFamily: 'monospace' }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', display: 'inline-block' }} />
+                LIVE
+              </span>
+            </div>
+          </div>
+          <div className="relative flex-1 mx-3 mb-3 rounded overflow-hidden" style={{ background: 'var(--canvas-letterbox)' }}>
+            <BaseImageSVG descriptors={descriptors} background={background} svgRef={svgRef} />
             <div className="absolute inset-0">
-              <TriangleSelector
-                state={triangle}
-                onChange={setTriangle}
-                svgSize={SVG_SIZE}
-                sectors={sectors}
-              />
+              <TriangleSelector state={triangle} onChange={setTriangle} svgSize={SVG_SIZE} sectors={sectors} />
             </div>
           </div>
         </section>
 
         {/* Right panel — kaleidoscope */}
-        <section className="flex flex-col p-4 gap-3 overflow-hidden">
-          <span className="label">Kaleidoscope</span>
-          <div className="flex-1 bg-neutral-900 rounded overflow-hidden flex items-center justify-center">
+        <section className="flex flex-col gap-3 overflow-hidden" style={{ background: 'var(--panel)' }}>
+          {/* Toolbar */}
+          <div className="px-3 py-2" style={{ borderBottom: '1px solid var(--border)' }}>
+            <span className="label">Kaleidoscope</span>
+          </div>
+          <div className="flex-1 mx-3 rounded overflow-hidden flex items-center justify-center" style={{ background: 'var(--kaleido-bg)', boxShadow: 'var(--kaleido-glow)' }}>
             <KaleidoscopeCanvas ref={canvasRef} />
           </div>
-          <SectorControls
-            sectors={sectors}
-            flip={flip}
-            onSectorsChange={handleSectorsChange}
-            onFlipChange={setFlip}
-          />
-          <div className="flex flex-col gap-1">
-            <label className="label flex justify-between">
-              <span>Interval</span>
-              <span className="text-neutral-400">{interval}ms</span>
-            </label>
-            <input
-              type="range"
-              min={50}
-              max={1000}
-              step={50}
-              value={interval}
-              onChange={e => setInterval_(Number(e.target.value))}
-              className="w-full accent-violet-500"
-            />
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handleApply}
-              disabled={isApplying || isPlaying}
-              className="flex-1 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-medium py-2 rounded transition-colors"
-            >
-              {isApplying ? "Rendering…" : "Apply"}
-            </button>
+          <div className="px-3 pb-3 flex flex-col gap-3">
+            <SectorControls sectors={sectors} flip={flip} onSectorsChange={handleSectorsChange} onFlipChange={setFlip} />
+            <div className="flex flex-col gap-1">
+              <label className="label flex justify-between">
+                <span>Interval</span>
+                <span style={{ color: 'var(--text-dim)', fontFamily: 'monospace', fontSize: 10 }}>
+                  {interval}ms <span style={{ color: 'var(--text-faint)' }}>· {fps}fps</span>
+                </span>
+              </label>
+              <input type="range" min={50} max={1000} step={50} value={interval}
+                onChange={e => setInterval_(Number(e.target.value))}
+                className="w-full accent-violet-500" />
+            </div>
             <button
               onClick={handlePlay}
-              disabled={isApplying}
-              className="flex-1 bg-violet-800 hover:bg-violet-700 disabled:opacity-50 text-white text-sm font-medium py-2 rounded transition-colors"
+              className="w-full py-2 rounded text-sm font-medium text-white transition-colors"
+              style={{ background: isPlaying ? 'var(--accent-dim)' : 'var(--accent)' }}
+              onMouseOver={e => (e.currentTarget.style.background = 'var(--accent-dim)')}
+              onMouseOut={e => (e.currentTarget.style.background = isPlaying ? 'var(--accent-dim)' : 'var(--accent)')}
             >
-              {isPlaying ? "Stop" : "Play"}
+              {isPlaying ? 'Stop' : '▶ Play'}
             </button>
           </div>
         </section>
       </div>
     </div>
-  );
+  )
 }

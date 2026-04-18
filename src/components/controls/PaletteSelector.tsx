@@ -18,7 +18,6 @@ export function PaletteSelector({ selected, onChange }: Props) {
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="label">Palette</span>
       <div className="flex flex-col gap-1.5">
         {PALETTES.map(palette => (
           <button

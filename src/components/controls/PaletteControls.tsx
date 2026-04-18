@@ -23,12 +23,10 @@ export function PaletteControls({
 }: Props) {
   return (
     <div className="flex flex-col gap-3">
-      <span className="label">Color application</span>
-
       <div className="flex flex-col gap-1">
         <label className="label flex justify-between">
           <span>Opacity min</span>
-          <span className="text-neutral-400">{Math.round(opacityMin * 100)}%</span>
+          <span style={{ color: 'var(--text-dim)', fontFamily: 'monospace', fontSize: 10 }}>{Math.round(opacityMin * 100)}%</span>
         </label>
         <input
           type="range" min={0} max={100} step={5}
@@ -45,7 +43,7 @@ export function PaletteControls({
       <div className="flex flex-col gap-1">
         <label className="label flex justify-between">
           <span>Opacity max</span>
-          <span className="text-neutral-400">{Math.round(opacityMax * 100)}%</span>
+          <span style={{ color: 'var(--text-dim)', fontFamily: 'monospace', fontSize: 10 }}>{Math.round(opacityMax * 100)}%</span>
         </label>
         <input
           type="range" min={0} max={100} step={5}
@@ -66,11 +64,11 @@ export function PaletteControls({
             <button
               key={s.value}
               onClick={() => onColorStrategyChange(s.value)}
-              className={`flex-1 py-1 rounded text-xs font-medium transition-colors ${
-                colorStrategy === s.value
-                  ? 'bg-violet-600 text-white'
-                  : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
-              }`}
+              className="flex-1 py-1 rounded text-xs font-medium transition-colors"
+              style={{
+                background: colorStrategy === s.value ? 'var(--accent)' : 'rgba(255,255,255,0.06)',
+                color: colorStrategy === s.value ? '#fff' : 'var(--text-dim)',
+              }}
             >
               {s.label}
             </button>

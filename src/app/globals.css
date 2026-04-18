@@ -1,11 +1,42 @@
 @import "tailwindcss";
 
+:root {
+  --bg: #0b0b0f;
+  --panel: #111117;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --accent: #8b5cf6;
+  --accent-dim: #6d28d9;
+  --text: #e8e8ee;
+  --text-dim: rgba(232, 232, 238, 0.55);
+  --text-faint: rgba(232, 232, 238, 0.35);
+  --canvas-letterbox: #1a0a2e;
+  --kaleido-bg: #06060a;
+  --kaleido-glow: 0 8px 40px rgba(139, 92, 246, 0.2);
+  --yellow: #ffd700;
+}
+
 @layer components {
   .control-btn {
-    @apply bg-neutral-800 hover:bg-neutral-700 text-neutral-200 px-2 py-1 rounded text-sm font-mono transition-colors;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-family: monospace;
+    transition: background 0.15s;
+    border: none;
+    cursor: pointer;
+  }
+  .control-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
   }
 
   .label {
-    @apply text-xs text-neutral-400 uppercase tracking-wider font-medium;
+    font-size: 0.625rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
   }
 }

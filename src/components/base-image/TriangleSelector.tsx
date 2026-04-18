@@ -1,5 +1,5 @@
 'use client'
-import React, { useRef, useCallback } from 'react'
+import React, { useRef, useCallback, useState } from 'react'
 import type { TriangleState } from '@/lib/kaleidoscope'
 
 interface Props {
@@ -18,9 +18,13 @@ export function TriangleSelector({ state, onChange, svgSize, sectors }: Props) {
   const isDragging = useRef(false)
   const dragOffset = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 })
   const svgRef = useRef<SVGSVGElement | null>(null)
+  const [hovered, setHovered] = useState(false)
 
   const vertices = triangleVertices(cx, cy, angle, size, sectors)
   const points = vertices.map(v => `${v.x},${v.y}`).join(' ')
+  const apex = vertices[0]
+  const h1 = vertices[1]
+  const h2 = vertices[2]
 
   const svgPoint = useCallback((e: React.PointerEvent): { x: number; y: number } | null => {
     const svg = svgRef.current
@@ -58,9 +62,20 @@ export function TriangleSelector({ state, onChange, svgSize, sectors }: Props) {
         className="absolute inset-0 w-full h-full"
         style={{ pointerEvents: 'none' }}
       >
+        {/* Hover rotation ring */}
+        {hovered && (
+          <circle
+            cx={apex.x} cy={apex.y} r={28}
+            fill="none" stroke="#ffd700" strokeWidth={1}
+            strokeDasharray="4 3" opacity={0.55}
+            style={{ pointerEvents: 'none' }}
+          />
+        )}
+
+        {/* Triangle */}
         <polygon
           points={points}
-          fill="rgba(255,215,0,0.08)"
+          fill="rgba(255,215,0,0.06)"
           stroke="#ffd700"
           strokeWidth="2"
           strokeDasharray="6 3"
@@ -68,7 +83,17 @@ export function TriangleSelector({ state, onChange, svgSize, sectors }: Props) {
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
+          onPointerEnter={() => setHovered(true)}
+          onPointerLeave={() => setHovered(false)}
         />
+
+        {/* Base corner handles */}
+        <rect x={h1.x - 4} y={h1.y - 4} width={8} height={8} fill="#ffd700" style={{ pointerEvents: 'none' }} />
+        <rect x={h2.x - 4} y={h2.y - 4} width={8} height={8} fill="#ffd700" style={{ pointerEvents: 'none' }} />
+
+        {/* Apex dot */}
+        <circle cx={apex.x} cy={apex.y} r={5} fill="#ffd700" style={{ pointerEvents: 'none' }} />
+        <circle cx={apex.x} cy={apex.y} r={2} fill="#000" style={{ pointerEvents: 'none' }} />
       </svg>
 
       {/* Control buttons */}
