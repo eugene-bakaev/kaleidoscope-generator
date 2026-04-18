@@ -2,9 +2,7 @@
 import type { PrimitiveType, PrimitiveDescriptor } from './primitives/types'
 import { GENERATORS } from './primitives/index'
 import { createRandom } from './primitives/random'
-import { PALETTES, type Palette } from './palette'
-
-export type ColorStrategy = 'random' | 'sequential' | 'by-type'
+import { type Palette } from './palette'
 
 export interface GenerateImageConfig {
   enabledTypes: readonly PrimitiveType[]
@@ -14,11 +12,10 @@ export interface GenerateImageConfig {
   seed: number
   opacityMin: number     // 0–1
   opacityMax: number     // 0–1
-  colorStrategy: ColorStrategy
 }
 
 export function generateImage(config: GenerateImageConfig): PrimitiveDescriptor[] {
-  const { enabledTypes, palette, count, complexity, seed, opacityMin, opacityMax, colorStrategy } = config
+  const { enabledTypes, palette, count, complexity, seed, opacityMin, opacityMax } = config
   const rng = createRandom(seed)
   const result: PrimitiveDescriptor[] = []
 
@@ -26,10 +23,8 @@ export function generateImage(config: GenerateImageConfig): PrimitiveDescriptor[
     const type = rng.pick([...enabledTypes])
     const generator = GENERATORS[type]
 
-    const colors = selectColors(palette.colors, colorStrategy, i, type, enabledTypes)
-
     const primitiveConfig = {
-      palette: colors,
+      palette: [palette.colors[i % palette.colors.length]],
       bounds: { width: 500, height: 500 },
       rng: createRandom(rng.randInt(0, 0xffffffff)),
       complexity,
@@ -41,24 +36,4 @@ export function generateImage(config: GenerateImageConfig): PrimitiveDescriptor[
   }
 
   return result
-}
-
-function selectColors(
-  colors: string[],
-  strategy: ColorStrategy,
-  index: number,
-  type: PrimitiveType,
-  enabledTypes: readonly PrimitiveType[],
-): string[] {
-  switch (strategy) {
-    case 'sequential':
-      return [colors[index % colors.length]]
-    case 'by-type': {
-      const typeIndex = [...enabledTypes].sort().indexOf(type)
-      return [colors[typeIndex % colors.length]]
-    }
-    case 'random':
-    default:
-      return PALETTES.flatMap(p => p.colors)
-  }
 }

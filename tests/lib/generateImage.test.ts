@@ -12,7 +12,6 @@ const config = {
   seed: 42,
   opacityMin: 0.4,
   opacityMax: 1.0,
-  colorStrategy: 'random' as const,
 }
 
 describe('generateImage', () => {

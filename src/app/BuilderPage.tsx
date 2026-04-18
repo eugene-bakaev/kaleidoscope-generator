@@ -11,8 +11,7 @@ import { KaleidoscopeCanvas } from '@/components/kaleidoscope/KaleidoscopeCanvas
 import { SectorControls } from '@/components/kaleidoscope/SectorControls'
 import { generateImage } from '@/lib/generateImage'
 import { renderKaleidoscope, rasterizeSVG, type TriangleState } from '@/lib/kaleidoscope'
-import type { ColorStrategy } from '@/lib/generateImage'
-import { PALETTES, getLightestColor, type Palette } from '@/lib/palette'
+import { PALETTES, getLightestColor, generateFullRandomPalette, type Palette } from '@/lib/palette'
 import type { PrimitiveType, PrimitiveDescriptor } from '@/lib/primitives/types'
 
 const SVG_SIZE = 500
@@ -37,7 +36,7 @@ export default function BuilderPage() {
   const [complexity, setComplexity] = useState(0.5)
   const [opacityMin, setOpacityMin] = useState(0.4)
   const [opacityMax, setOpacityMax] = useState(1.0)
-  const [colorStrategy, setColorStrategy] = useState<ColorStrategy>('random')
+  const [seed, setSeed] = useState(1)
   const [descriptors, setDescriptors] = useState<PrimitiveDescriptor[]>(() =>
     generateImage({
       enabledTypes: ['circles', 'dots', 'lines', 'polygons'],
@@ -47,7 +46,6 @@ export default function BuilderPage() {
       seed: 1,
       opacityMin: 0.4,
       opacityMax: 1.0,
-      colorStrategy: 'random',
     })
   )
   const [triangle, setTriangle] = useState<TriangleState>(INITIAL_TRIANGLE)
@@ -110,14 +108,26 @@ export default function BuilderPage() {
     if (offscreenRef.current) renderNow(triangle, sectors, flip)
   }, [triangle, sectors, flip, renderNow])
 
+  // Re-generate with same seed when palette changes — preserves layout, updates colors
+  useEffect(() => {
+    setDescriptors(generateImage({ enabledTypes, palette, count, complexity, seed, opacityMin, opacityMax }))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [palette])
+
   const handleGenerate = useCallback(() => {
     const newSeed = Math.floor(Math.random() * 0xffffffff)
-    setDescriptors(generateImage({ enabledTypes, palette, count, complexity, seed: newSeed, opacityMin, opacityMax, colorStrategy }))
-  }, [enabledTypes, palette, count, complexity, opacityMin, opacityMax, colorStrategy])
+    setSeed(newSeed)
+    const p = palette.id === 'full-random' ? generateFullRandomPalette(count) : palette
+    if (p !== palette) setPalette(p)
+    setDescriptors(generateImage({ enabledTypes, palette: p, count, complexity, seed: newSeed, opacityMin, opacityMax }))
+  }, [enabledTypes, palette, count, complexity, opacityMin, opacityMax])
 
   const handleSectorsChange = useCallback((s: number) => {
     setSectors(s)
-    setTriangle(t => ({ ...t, size: triangleSizeForSectors(s) }))
+    setTriangle(t => {
+      const height = t.size * Math.cos(Math.PI / sectorsRef.current)
+      return { ...t, size: height / Math.cos(Math.PI / s) }
+    })
   }, [])
 
   const handlePlay = useCallback(async () => {
@@ -167,15 +177,15 @@ export default function BuilderPage() {
             <PrimitiveSelector selected={enabledTypes} onChange={setEnabledTypes} />
           </CollapsibleSection>
           <CollapsibleSection title="Palette">
-            <PaletteSelector selected={palette} onChange={setPalette} />
+            <PaletteSelector selected={palette} count={count} onChange={setPalette} />
           </CollapsibleSection>
           <CollapsibleSection title="Density">
             <DensityControls count={count} complexity={complexity} onCountChange={setCount} onComplexityChange={setComplexity} />
           </CollapsibleSection>
           <CollapsibleSection title="Color">
             <PaletteControls
-              opacityMin={opacityMin} opacityMax={opacityMax} colorStrategy={colorStrategy}
-              onOpacityMinChange={setOpacityMin} onOpacityMaxChange={setOpacityMax} onColorStrategyChange={setColorStrategy}
+              opacityMin={opacityMin} opacityMax={opacityMax}
+              onOpacityMinChange={setOpacityMin} onOpacityMaxChange={setOpacityMax}
             />
           </CollapsibleSection>
           <div className="mt-auto p-3" style={{ borderTop: '1px solid var(--border)' }}>

@@ -6,15 +6,16 @@ import { PALETTES } from '@/lib/palette'
 describe('PaletteSelector', () => {
   it('renders a swatch for each palette', () => {
     const { getAllByRole } = render(
-      <PaletteSelector selected={PALETTES[0]} onChange={vi.fn()} />
+      <PaletteSelector selected={PALETTES[0]} count={10} onChange={vi.fn()} />
     )
-    expect(getAllByRole('button').length).toBe(PALETTES.length)
+    // PALETTES swatches + random swatch + regen + full-random swatch + regen
+    expect(getAllByRole('button').length).toBe(PALETTES.length + 4)
   })
 
   it('calls onChange with the clicked palette', () => {
     const onChange = vi.fn()
     const { getAllByRole } = render(
-      <PaletteSelector selected={PALETTES[0]} onChange={onChange} />
+      <PaletteSelector selected={PALETTES[0]} count={10} onChange={onChange} />
     )
     fireEvent.click(getAllByRole('button')[2])
     expect(onChange).toHaveBeenCalledWith(PALETTES[2])

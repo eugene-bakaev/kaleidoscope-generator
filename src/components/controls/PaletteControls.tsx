@@ -1,25 +1,16 @@
 'use client'
 import React from 'react'
-import type { ColorStrategy } from '@/lib/generateImage'
 
 interface Props {
   opacityMin: number
   opacityMax: number
-  colorStrategy: ColorStrategy
   onOpacityMinChange: (v: number) => void
   onOpacityMaxChange: (v: number) => void
-  onColorStrategyChange: (v: ColorStrategy) => void
 }
 
-const STRATEGIES: { value: ColorStrategy; label: string }[] = [
-  { value: 'random',     label: 'Random' },
-  { value: 'sequential', label: 'Sequential' },
-  { value: 'by-type',    label: 'By type' },
-]
-
 export function PaletteControls({
-  opacityMin, opacityMax, colorStrategy,
-  onOpacityMinChange, onOpacityMaxChange, onColorStrategyChange,
+  opacityMin, opacityMax,
+  onOpacityMinChange, onOpacityMaxChange,
 }: Props) {
   return (
     <div className="flex flex-col gap-3">
@@ -55,25 +46,6 @@ export function PaletteControls({
           }}
           className="w-full accent-violet-500"
         />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <span className="label">Color strategy</span>
-        <div className="flex gap-1">
-          {STRATEGIES.map(s => (
-            <button
-              key={s.value}
-              onClick={() => onColorStrategyChange(s.value)}
-              className="flex-1 py-1 rounded text-xs font-medium transition-colors"
-              style={{
-                background: colorStrategy === s.value ? 'var(--accent)' : 'rgba(255,255,255,0.06)',
-                color: colorStrategy === s.value ? '#fff' : 'var(--text-dim)',
-              }}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
       </div>
     </div>
   )

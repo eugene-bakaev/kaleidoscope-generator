@@ -52,6 +52,14 @@ export function generateRandomPalette(): Palette {
   return { id: 'random', name: 'Random', colors }
 }
 
+/** Generates a palette where every shape + background gets its own random color. */
+export function generateFullRandomPalette(count: number): Palette {
+  const colors = Array.from({ length: count + 1 }, () =>
+    '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0')
+  )
+  return { id: 'full-random', name: 'Full Random', colors }
+}
+
 /** Returns the hex color with the lowest perceived luminance. */
 export function getDarkestColor(colors: string[]): string {
   return colors.reduce((darkest, color) => {
