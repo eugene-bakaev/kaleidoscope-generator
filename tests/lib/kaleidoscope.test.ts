@@ -39,6 +39,7 @@ describe('renderKaleidoscope', () => {
       triangle: { cx: 250, cy: 250, angle: 0, size: 100 },
       sectors: 6,
       flip: false,
+      svgSize: 500,
     })
     expect(mockCtx.clearRect).toHaveBeenCalledTimes(1)
   })
@@ -50,6 +51,7 @@ describe('renderKaleidoscope', () => {
       triangle: { cx: 250, cy: 250, angle: 0, size: 100 },
       sectors: 8,
       flip: false,
+      svgSize: 500,
     })
     expect(mockCtx.save).toHaveBeenCalledTimes(8)
     expect(mockCtx.restore).toHaveBeenCalledTimes(8)

@@ -6,18 +6,19 @@ interface Props {
   descriptors: PrimitiveDescriptor[]
   background: string
   svgRef: React.Ref<SVGSVGElement> | null
+  svgSize: number
 }
 
-export function BaseImageSVG({ descriptors, background, svgRef }: Props) {
+export function BaseImageSVG({ descriptors, background, svgRef, svgSize }: Props) {
   return (
     <svg
       ref={svgRef ?? undefined}
-      viewBox="0 0 500 500"
+      viewBox={`0 0 ${svgSize} ${svgSize}`}
       width="100%"
       height="100%"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <rect width="500" height="500" fill={background} />
+      <rect width={svgSize} height={svgSize} fill={background} />
       {descriptors.map((d, i) => renderDescriptor(d, i))}
     </svg>
   )

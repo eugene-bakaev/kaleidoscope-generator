@@ -13,10 +13,35 @@ export interface KaleidoscopeOptions {
   triangle: TriangleState
   sectors: number
   flip: boolean
+  svgSize: number
 }
 
 interface Point { x: number; y: number }
 interface Affine { a: number; b: number; c: number; d: number; e: number; f: number }
+
+/** The three vertices of the source triangle: [apex, leftBase, rightBase] */
+export function triangleVertices(t: TriangleState, sectors: number): [Point, Point, Point] {
+  const half = Math.PI / sectors
+  return [
+    { x: t.cx, y: t.cy },
+    { x: t.cx + Math.cos(t.angle - half) * t.size, y: t.cy + Math.sin(t.angle - half) * t.size },
+    { x: t.cx + Math.cos(t.angle + half) * t.size, y: t.cy + Math.sin(t.angle + half) * t.size },
+  ]
+}
+
+/** Rotates the triangle around an arbitrary pivot by `step` radians. */
+export function rotateAroundPivot(t: TriangleState, pivot: Point, step: number): TriangleState {
+  const cos = Math.cos(step)
+  const sin = Math.sin(step)
+  const dx = t.cx - pivot.x
+  const dy = t.cy - pivot.y
+  return {
+    ...t,
+    cx: pivot.x + dx * cos - dy * sin,
+    cy: pivot.y + dx * sin + dy * cos,
+    angle: t.angle + step,
+  }
+}
 
 /**
  * Divides the output square into `sectors` triangular wedges from the center,
@@ -30,7 +55,7 @@ interface Affine { a: number; b: number; c: number; d: number; e: number; f: num
  * This ensures the square is fully tiled — no gaps, no circular crop.
  */
 export function renderKaleidoscope(opts: KaleidoscopeOptions): void {
-  const { canvas, offscreenCanvas, triangle, sectors, flip } = opts
+  const { canvas, offscreenCanvas, triangle, sectors, flip, svgSize } = opts
   const ctx = canvas.getContext('2d')
   if (!ctx) return
 
@@ -41,10 +66,9 @@ export function renderKaleidoscope(opts: KaleidoscopeOptions): void {
 
   ctx.clearRect(0, 0, W, H)
 
-  // Scale from SVG coordinate space (500×500) to offscreen canvas pixels
-  const SVG_SIZE = 500
-  const scaleX = offscreenCanvas.width / SVG_SIZE
-  const scaleY = offscreenCanvas.height / SVG_SIZE
+  // Scale from SVG coordinate space to offscreen canvas pixels
+  const scaleX = offscreenCanvas.width / svgSize
+  const scaleY = offscreenCanvas.height / svgSize
 
   // Source triangle vertices in offscreen canvas pixel space
   // Isoceles: apex at (cx,cy), two legs at angle ± π/sectors

@@ -15,14 +15,14 @@ const descriptors: PrimitiveDescriptor[] = [
 describe('BaseImageSVG', () => {
   it('renders an SVG element', () => {
     const { container } = render(
-      <BaseImageSVG descriptors={descriptors} background="#111111" svgRef={null} />
+      <BaseImageSVG descriptors={descriptors} background="#111111" svgRef={null} svgSize={500} />
     )
     expect(container.querySelector('svg')).not.toBeNull()
   })
 
   it('renders a rect for background', () => {
     const { container } = render(
-      <BaseImageSVG descriptors={descriptors} background="#111111" svgRef={null} />
+      <BaseImageSVG descriptors={descriptors} background="#111111" svgRef={null} svgSize={500} />
     )
     const rect = container.querySelector('rect')
     expect(rect?.getAttribute('fill')).toBe('#111111')
@@ -30,7 +30,7 @@ describe('BaseImageSVG', () => {
 
   it('renders each descriptor type', () => {
     const { container } = render(
-      <BaseImageSVG descriptors={descriptors} background="#111111" svgRef={null} />
+      <BaseImageSVG descriptors={descriptors} background="#111111" svgRef={null} svgSize={500} />
     )
     expect(container.querySelector('circle')).not.toBeNull()
     expect(container.querySelector('line')).not.toBeNull()

@@ -12,10 +12,11 @@ export interface GenerateImageConfig {
   seed: number
   opacityMin: number     // 0–1
   opacityMax: number     // 0–1
+  svgSize: number        // side length of the SVG canvas
 }
 
 export function generateImage(config: GenerateImageConfig): PrimitiveDescriptor[] {
-  const { enabledTypes, palette, count, complexity, seed, opacityMin, opacityMax } = config
+  const { enabledTypes, palette, count, complexity, seed, opacityMin, opacityMax, svgSize } = config
   const rng = createRandom(seed)
   const result: PrimitiveDescriptor[] = []
 
@@ -25,7 +26,7 @@ export function generateImage(config: GenerateImageConfig): PrimitiveDescriptor[
 
     const primitiveConfig = {
       palette: [palette.colors[i % palette.colors.length]],
-      bounds: { width: 500, height: 500 },
+      bounds: { width: svgSize, height: svgSize },
       rng: createRandom(rng.randInt(0, 0xffffffff)),
       complexity,
       opacityMin,

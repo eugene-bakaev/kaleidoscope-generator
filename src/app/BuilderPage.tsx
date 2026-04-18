@@ -10,22 +10,15 @@ import { TriangleSelector } from '@/components/base-image/TriangleSelector'
 import { KaleidoscopeCanvas } from '@/components/kaleidoscope/KaleidoscopeCanvas'
 import { SectorControls } from '@/components/kaleidoscope/SectorControls'
 import { generateImage } from '@/lib/generateImage'
-import { renderKaleidoscope, rasterizeSVG, type TriangleState } from '@/lib/kaleidoscope'
+import { renderKaleidoscope, rasterizeSVG, rotateAroundPivot, triangleVertices, type TriangleState } from '@/lib/kaleidoscope'
 import { PALETTES, getLightestColor, generateFullRandomPalette, type Palette } from '@/lib/palette'
 import type { PrimitiveType, PrimitiveDescriptor } from '@/lib/primitives/types'
 
-const SVG_SIZE = 500
+const INITIAL_SVG_SIZE = 500
 const INITIAL_SECTORS = 8
 const ROTATE_STEP = (5 * Math.PI) / 180
 
-const triangleSizeForSectors = (n: number) => (SVG_SIZE / 2) * Math.tan(Math.PI / n)
-
-const INITIAL_TRIANGLE: TriangleState = {
-  cx: SVG_SIZE / 2,
-  cy: SVG_SIZE / 2,
-  angle: 0,
-  size: triangleSizeForSectors(INITIAL_SECTORS),
-}
+const triangleSizeForSectors = (n: number, svgSize: number) => (svgSize / 2) * Math.tan(Math.PI / n)
 
 const ALL_TYPES: PrimitiveType[] = ['circles', 'concentricCircles', 'spirals', 'zigzags', 'lines', 'dots', 'polygons', 'sines']
 
@@ -37,6 +30,7 @@ export default function BuilderPage() {
   const [opacityMin, setOpacityMin] = useState(0.4)
   const [opacityMax, setOpacityMax] = useState(1.0)
   const [seed, setSeed] = useState(1)
+  const [svgSize, setSvgSize] = useState(INITIAL_SVG_SIZE)
   const [descriptors, setDescriptors] = useState<PrimitiveDescriptor[]>(() =>
     generateImage({
       enabledTypes: ['circles', 'dots', 'lines', 'polygons'],
@@ -46,13 +40,21 @@ export default function BuilderPage() {
       seed: 1,
       opacityMin: 0.4,
       opacityMax: 1.0,
+      svgSize: INITIAL_SVG_SIZE,
     })
   )
-  const [triangle, setTriangle] = useState<TriangleState>(INITIAL_TRIANGLE)
+  const [triangle, setTriangle] = useState<TriangleState>({
+    cx: INITIAL_SVG_SIZE / 2,
+    cy: INITIAL_SVG_SIZE / 2,
+    angle: 0,
+    size: triangleSizeForSectors(INITIAL_SECTORS, INITIAL_SVG_SIZE),
+  })
   const [sectors, setSectors] = useState(INITIAL_SECTORS)
   const [flip, setFlip] = useState(true)
   const [isPlaying, setIsPlaying] = useState(false)
   const [interval, setInterval_] = useState(100)
+  const [pivotMode, setPivotMode] = useState<'apex' | 'left' | 'right' | 'custom'>('apex')
+  const [pivot, setPivot] = useState({ x: INITIAL_SVG_SIZE / 2, y: INITIAL_SVG_SIZE / 2 })
 
   const svgRef = useRef<SVGSVGElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -61,11 +63,15 @@ export default function BuilderPage() {
   const sectorsRef = useRef(sectors)
   const flipRef = useRef(flip)
   const intervalRef = useRef(interval)
+  const svgSizeRef = useRef(svgSize)
+  const pivotRef = useRef(pivot)
 
   useEffect(() => { triangleRef.current = triangle }, [triangle])
   useEffect(() => { sectorsRef.current = sectors }, [sectors])
   useEffect(() => { flipRef.current = flip }, [flip])
   useEffect(() => { intervalRef.current = interval }, [interval])
+  useEffect(() => { svgSizeRef.current = svgSize }, [svgSize])
+  useEffect(() => { pivotRef.current = pivot }, [pivot])
 
   const background = getLightestColor(palette.colors)
 
@@ -75,7 +81,7 @@ export default function BuilderPage() {
     const svg = svgRef.current
     if (!canvas || !svg) return null
     const dpr = (window.devicePixelRatio || 1) * 2
-    const cssSize = Math.min(canvas.clientWidth, canvas.clientHeight) || SVG_SIZE
+    const cssSize = Math.min(canvas.clientWidth, canvas.clientHeight) || INITIAL_SVG_SIZE
     const px = Math.round(cssSize * dpr)
     canvas.width = px
     canvas.height = px
@@ -88,7 +94,7 @@ export default function BuilderPage() {
     const canvas = canvasRef.current
     const offscreen = offscreenRef.current
     if (!canvas || !offscreen) return
-    renderKaleidoscope({ canvas, offscreenCanvas: offscreen, triangle: t, sectors: s, flip: f })
+    renderKaleidoscope({ canvas, offscreenCanvas: offscreen, triangle: t, sectors: s, flip: f, svgSize: svgSizeRef.current })
   }, [])
 
   // Re-rasterize whenever the base image changes, then re-render
@@ -110,25 +116,67 @@ export default function BuilderPage() {
 
   // Re-generate with same seed when palette changes — preserves layout, updates colors
   useEffect(() => {
-    setDescriptors(generateImage({ enabledTypes, palette, count, complexity, seed, opacityMin, opacityMax }))
+    setDescriptors(generateImage({ enabledTypes, palette, count, complexity, seed, opacityMin, opacityMax, svgSize }))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [palette])
+
+  // Re-generate with new bounds when canvas size changes — primitives spread over new area
+  useEffect(() => {
+    setDescriptors(generateImage({ enabledTypes, palette, count, complexity, seed, opacityMin, opacityMax, svgSize }))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [svgSize])
 
   const handleGenerate = useCallback(() => {
     const newSeed = Math.floor(Math.random() * 0xffffffff)
     setSeed(newSeed)
     const p = palette.id === 'full-random' ? generateFullRandomPalette(count) : palette
     if (p !== palette) setPalette(p)
-    setDescriptors(generateImage({ enabledTypes, palette: p, count, complexity, seed: newSeed, opacityMin, opacityMax }))
-  }, [enabledTypes, palette, count, complexity, opacityMin, opacityMax])
+    setDescriptors(generateImage({ enabledTypes, palette: p, count, complexity, seed: newSeed, opacityMin, opacityMax, svgSize }))
+  }, [enabledTypes, palette, count, complexity, opacityMin, opacityMax, svgSize])
+
+  // Compute the snapped pivot position for non-custom modes
+  const computeSnappedPivot = useCallback((t: TriangleState, mode: typeof pivotMode, s: number) => {
+    if (mode === 'custom') return null
+    const verts = triangleVertices(t, s)
+    if (mode === 'apex')  return verts[0]
+    if (mode === 'left')  return verts[1]
+    if (mode === 'right') return verts[2]
+    return verts[0]
+  }, [])
+
+  // Keep pivot snapped when triangle moves (for non-custom modes)
+  const handleTriangleChange = useCallback((next: TriangleState) => {
+    setTriangle(next)
+    const snapped = computeSnappedPivot(next, pivotMode, sectorsRef.current)
+    if (snapped) setPivot(snapped)
+  }, [pivotMode, computeSnappedPivot])
+
+  // Snap pivot to new corner when mode changes
+  const handlePivotModeChange = useCallback((mode: typeof pivotMode) => {
+    setPivotMode(mode)
+    if (mode !== 'custom') {
+      const snapped = computeSnappedPivot(triangleRef.current, mode, sectorsRef.current)
+      if (snapped) setPivot(snapped)
+    }
+  }, [computeSnappedPivot])
+
+  const handleSvgSizeChange = useCallback((newSize: number) => {
+    const scale = newSize / svgSizeRef.current
+    setTriangle(t => ({ ...t, cx: t.cx * scale, cy: t.cy * scale, size: t.size * scale }))
+    setPivot(p => ({ x: p.x * scale, y: p.y * scale }))
+    setSvgSize(newSize)
+  }, [])
 
   const handleSectorsChange = useCallback((s: number) => {
     setSectors(s)
     setTriangle(t => {
       const height = t.size * Math.cos(Math.PI / sectorsRef.current)
-      return { ...t, size: height / Math.cos(Math.PI / s) }
+      const next = { ...t, size: height / Math.cos(Math.PI / s) }
+      const snapped = computeSnappedPivot(next, pivotMode, s)
+      if (snapped) setPivot(snapped)
+      return next
     })
-  }, [])
+  }, [pivotMode, computeSnappedPivot])
 
   const handlePlay = useCallback(async () => {
     if (isPlaying) { setIsPlaying(false); return }
@@ -145,13 +193,16 @@ export default function BuilderPage() {
   useEffect(() => {
     if (!isPlaying) return
     const id = window.setInterval(() => {
-      const next: TriangleState = { ...triangleRef.current, angle: triangleRef.current.angle + ROTATE_STEP }
+      const next = rotateAroundPivot(triangleRef.current, pivotRef.current, ROTATE_STEP)
       triangleRef.current = next
       setTriangle(next)
+      // For non-custom pivot modes, the pivot itself follows the triangle vertex
+      // (apex mode: pivot stays fixed since apex IS the pivot; corner modes: pivot orbits with the corner)
+      // We don't update pivotRef here — it stays fixed as the orbit center
       const canvas = canvasRef.current
       const offscreen = offscreenRef.current
       if (canvas && offscreen) {
-        renderKaleidoscope({ canvas, offscreenCanvas: offscreen, triangle: next, sectors: sectorsRef.current, flip: flipRef.current })
+        renderKaleidoscope({ canvas, offscreenCanvas: offscreen, triangle: next, sectors: sectorsRef.current, flip: flipRef.current, svgSize: svgSizeRef.current })
       }
     }, intervalRef.current)
     return () => window.clearInterval(id)
@@ -212,11 +263,26 @@ export default function BuilderPage() {
                 LIVE
               </span>
             </div>
+            <div className="flex items-center gap-2">
+              <span className="label" style={{ color: 'var(--text-dim)' }}>Canvas</span>
+              <span style={{ color: 'var(--text-dim)', fontFamily: 'monospace', fontSize: 10, width: 36, textAlign: 'right' }}>{svgSize}</span>
+              <input
+                type="range" min={500} max={2000} step={100}
+                value={svgSize}
+                onChange={e => handleSvgSizeChange(Number(e.target.value))}
+                className="accent-violet-500"
+                style={{ width: 80 }}
+              />
+            </div>
           </div>
           <div className="relative flex-1 mx-3 mb-3 rounded overflow-hidden" style={{ background: 'var(--canvas-letterbox)' }}>
-            <BaseImageSVG descriptors={descriptors} background={background} svgRef={svgRef} />
+            <BaseImageSVG descriptors={descriptors} background={background} svgRef={svgRef} svgSize={svgSize} />
             <div className="absolute inset-0">
-              <TriangleSelector state={triangle} onChange={setTriangle} svgSize={SVG_SIZE} sectors={sectors} />
+              <TriangleSelector
+                state={triangle} onChange={handleTriangleChange} svgSize={svgSize} sectors={sectors}
+                pivot={pivot} pivotMode={pivotMode}
+                onPivotChange={setPivot} onPivotModeChange={handlePivotModeChange}
+              />
             </div>
           </div>
         </section>

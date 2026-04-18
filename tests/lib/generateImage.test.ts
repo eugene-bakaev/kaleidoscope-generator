@@ -12,6 +12,7 @@ const config = {
   seed: 42,
   opacityMin: 0.4,
   opacityMax: 1.0,
+  svgSize: 500,
 }
 
 describe('generateImage', () => {
