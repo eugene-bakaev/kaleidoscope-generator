@@ -113,7 +113,7 @@ export function TriangleSelector({ state, onChange, svgSize, sectors, pivot, piv
           fill="none"
           stroke="#fff"
           strokeWidth={4}
-          opacity={0.6}
+
           style={{ pointerEvents: 'all', cursor: 'move' }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
