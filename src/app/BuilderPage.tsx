@@ -243,7 +243,8 @@ export default function BuilderPage() {
           <div className="mt-auto p-3" style={{ borderTop: '1px solid var(--border)' }}>
             <button
               onClick={handleGenerate}
-              className="btn-accent w-full py-2 rounded text-sm font-medium text-white"
+              className="w-full py-2 rounded text-sm font-medium text-white"
+              style={{ background: 'var(--accent)' }}
             >
               Generate
             </button>
@@ -309,8 +310,8 @@ export default function BuilderPage() {
             </div>
             <button
               onClick={handlePlay}
-              className="btn-accent w-full py-2 rounded text-sm font-medium text-white"
-              style={isPlaying ? { background: 'var(--accent-dim)' } : undefined}
+              className="w-full py-2 rounded text-sm font-medium text-white"
+              style={{ background: isPlaying ? 'var(--accent-dim)' : 'var(--accent)' }}
             >
               {isPlaying ? 'Stop' : '▶ Play'}
             </button>
