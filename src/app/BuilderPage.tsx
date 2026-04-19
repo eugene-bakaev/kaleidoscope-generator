@@ -16,7 +16,7 @@ import type { PrimitiveType, PrimitiveDescriptor } from '@/lib/primitives/types'
 
 const INITIAL_SVG_SIZE = 500
 const INITIAL_SECTORS = 8
-const ROTATE_STEP = (5 * Math.PI) / 180
+const ROTATE_STEP = (Math.PI * Math.PI) / 180
 
 const triangleSizeForSectors = (n: number, svgSize: number) => (svgSize / 2) * Math.tan(Math.PI / n)
 
