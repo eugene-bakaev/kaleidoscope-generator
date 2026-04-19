@@ -1,5 +1,5 @@
 'use client'
-import React, { useRef, useCallback, useState, useMemo } from 'react'
+import React, { useRef, useCallback, useMemo } from 'react'
 import type { TriangleState } from '@/lib/kaleidoscope'
 import { triangleVertices } from '@/lib/kaleidoscope'
 
@@ -33,7 +33,6 @@ export function TriangleSelector({ state, onChange, svgSize, sectors, pivot, piv
   const isDraggingPivot = useRef(false)
   const dragOffset = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 })
   const svgRef = useRef<SVGSVGElement | null>(null)
-  const [hovered, setHovered] = useState(false)
 
   const [vertices, points] = useMemo(() => {
     const v = triangleVertices(state, sectors)
@@ -97,29 +96,16 @@ export function TriangleSelector({ state, onChange, svgSize, sectors, pivot, piv
         onPointerMove={onPivotPointerMove}
         onPointerUp={onPivotPointerUp}
       >
-        {/* Hover rotation ring */}
-        {hovered && (
-          <circle
-            cx={apex.x} cy={apex.y} r={28}
-            fill="none" stroke="#0b0b0f" strokeWidth={1.2}
-            strokeDasharray="2 3" opacity={0.55}
-            style={{ pointerEvents: 'none' }}
-          />
-        )}
-
         {/* Triangle — white halo + dark dashed line for contrast on any background */}
         <polygon
           points={points}
           fill="none"
           stroke="#fff"
           strokeWidth={4}
-
           style={{ pointerEvents: 'all', cursor: 'move' }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
-          onPointerEnter={() => setHovered(true)}
-          onPointerLeave={() => setHovered(false)}
         />
         <polygon
           points={points}
@@ -130,27 +116,17 @@ export function TriangleSelector({ state, onChange, svgSize, sectors, pivot, piv
           style={{ pointerEvents: 'none' }}
         />
 
-        {/* Base corner handles */}
-        <rect x={h1.x - 4} y={h1.y - 4} width={8} height={8} fill="#0b0b0f" stroke="#fff" strokeWidth={1} style={{ pointerEvents: 'none' }} />
-        <rect x={h2.x - 4} y={h2.y - 4} width={8} height={8} fill="#0b0b0f" stroke="#fff" strokeWidth={1} style={{ pointerEvents: 'none' }} />
+        {/* All three vertex handles — same style */}
+        <circle cx={apex.x} cy={apex.y} r={5} fill="#fff" stroke="#0b0b0f" strokeWidth={1.5} style={{ pointerEvents: 'none' }} />
+        <circle cx={h1.x} cy={h1.y} r={5} fill="#fff" stroke="#0b0b0f" strokeWidth={1.5} style={{ pointerEvents: 'none' }} />
+        <circle cx={h2.x} cy={h2.y} r={5} fill="#fff" stroke="#0b0b0f" strokeWidth={1.5} style={{ pointerEvents: 'none' }} />
 
-        {/* Apex pin */}
-        <circle cx={apex.x} cy={apex.y} r={8} fill="#0b0b0f" stroke="#fff" strokeWidth={1.5} style={{ pointerEvents: 'none' }} />
-        <circle cx={apex.x} cy={apex.y} r={3} fill="#facc15" style={{ pointerEvents: 'none' }} />
-
-        {/* Pivot marker — always visible */}
-        <line
-          x1={pivot.x - 7} y1={pivot.y} x2={pivot.x + 7} y2={pivot.y}
-          stroke="#60a5fa" strokeWidth={1.5} style={{ pointerEvents: 'none' }}
-        />
-        <line
-          x1={pivot.x} y1={pivot.y - 7} x2={pivot.x} y2={pivot.y + 7}
-          stroke="#60a5fa" strokeWidth={1.5} style={{ pointerEvents: 'none' }}
-        />
+        {/* Pivot marker — always visible, draggable in custom mode */}
         <circle
-          cx={pivot.x} cy={pivot.y} r={5}
-          fill={pivotMode === 'custom' ? 'rgba(96,165,250,0.3)' : 'none'}
-          stroke="#60a5fa" strokeWidth={1.5}
+          cx={pivot.x} cy={pivot.y}
+          r={9}
+          fill="#ffffff"
+          stroke="#0b0b0f" strokeWidth={2}
           style={{ pointerEvents: pivotMode === 'custom' ? 'all' : 'none', cursor: pivotMode === 'custom' ? 'grab' : 'default' }}
           onPointerDown={onPivotPointerDown}
         />
